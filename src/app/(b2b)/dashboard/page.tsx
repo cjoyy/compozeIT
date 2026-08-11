@@ -37,7 +37,8 @@ export default function B2BDashboardPage() {
   const { userId, userName } = useRole();
   const [submissions, setSubmissions] = useState<WasteSubmission[]>([]);
   const [loading, setLoading] = useState(true);
-  const [error] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [reloadToken, setReloadToken] = useState(0);
 
   useEffect(() => {
     let active = true;
@@ -50,8 +51,8 @@ export default function B2BDashboardPage() {
         }
         const data = await res.json();
         if (active) setSubmissions(data.submissions || []);
-      } catch {
-        if (active) setSubmissions([]);
+      } catch (err) {
+        if (active) setError(err instanceof Error ? err.message : 'Gagal memuat data');
       } finally {
         if (active) setLoading(false);
       }
@@ -60,7 +61,9 @@ export default function B2BDashboardPage() {
     return () => {
       active = false;
     };
-  }, [userId]);
+  }, [userId, reloadToken]);
+
+  const handleRetry = () => setReloadToken((t) => t + 1);
 
   const totalKg = submissions.reduce((sum, s) => sum + Number(s.estimated_weight_kg || 0), 0);
   const totalCostSaved = totalKg * CONVENTIONAL_COST_PER_KG;
@@ -85,7 +88,7 @@ export default function B2BDashboardPage() {
   };
 
   if (loading) return <LoadingState message="Memuat dashboard..." className="py-20" />;
-  if (error) return <ErrorState message={error} onRetry={fetchSubmissions} className="py-20" />;
+  if (error) return <ErrorState message={error} onRetry={handleRetry} className="py-20" />;
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">

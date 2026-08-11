@@ -141,8 +141,9 @@ export async function POST(request: NextRequest) {
     // 5a. Sell track: add estimated value and nearby collection points
     if (body.track === 'sell') {
       const weight = Number(classificationResult.estimated_weight_kg) || 0;
-      response.estimated_value = Math.round(weight * SELL_PRICE_PER_KG);
-      response.estimated_value_formatted = `Rp ${response.estimated_value?.toLocaleString('id-ID')}`;
+      const estVal = Math.round(weight * SELL_PRICE_PER_KG);
+      response.estimated_value = estVal;
+      response.estimated_value_formatted = `Rp ${estVal.toLocaleString('id-ID')}`;
 
       // Find nearby collection points if user location is provided
       if (body.lat && body.lng) {
