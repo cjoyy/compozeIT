@@ -211,3 +211,14 @@ INSERT INTO marketplace_listings (id, processor_id, product_type, price_per_kg, 
   ('b2c3d4e5-2222-4000-8000-000000000015', 'a1b2c3d4-1111-4000-8000-000000000010', 'compost', 3000, 220.00, '10-4-8', 'Kompos industrial — bulk order untuk perkebunan dan nursery.')
 
 ON CONFLICT (id) DO NOTHING;
+
+-- ============================================================
+-- SEED DATA: Demo Users (for frontend demo — no auth system)
+-- ============================================================
+
+INSERT INTO users (id, name, type, business_name, location_lat, location_lng) VALUES
+  -- B2B demo user: a restaurant in Jakarta Selatan
+  ('d0d0d0d0-demo-4000-8000-000000000001', 'Restoran Hijau Nusantara', 'b2b', 'PT Hijau Nusantara', -6.2615, 106.8106),
+  -- B2C demo user: individual in Jakarta Pusat
+  ('d0d0d0d0-demo-4000-8000-000000000002', 'Budi Santoso', 'b2c', NULL, -6.1862, 106.8345)
+ON CONFLICT (id) DO NOTHING;
