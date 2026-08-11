@@ -29,6 +29,8 @@ export default function ImpactDashboardPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  const [reloadToken, setReloadToken] = useState(0);
+
   useEffect(() => {
     let active = true;
     async function loadImpact() {
@@ -47,10 +49,12 @@ export default function ImpactDashboardPage() {
     return () => {
       active = false;
     };
-  }, []);
+  }, [reloadToken]);
+
+  const handleRetry = () => setReloadToken((t) => t + 1);
 
   if (loading) return <LoadingState message="Memuat Impact Dashboard..." className="py-20" />;
-  if (error) return <ErrorState message={error} onRetry={fetchImpact} className="py-20" />;
+  if (error) return <ErrorState message={error} onRetry={handleRetry} className="py-20" />;
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">

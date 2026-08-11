@@ -36,6 +36,8 @@ export default function MarketplacePage() {
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
   const [selectedListing, setSelectedListing] = useState<MarketplaceListing | null>(null);
 
+  const [reloadToken, setReloadToken] = useState(0);
+
   useEffect(() => {
     let active = true;
     async function loadListings() {
@@ -59,7 +61,9 @@ export default function MarketplacePage() {
     return () => {
       active = false;
     };
-  }, [filter, sortBy, sortOrder]);
+  }, [filter, sortBy, sortOrder, reloadToken]);
+
+  const handleRetry = () => setReloadToken((t) => t + 1);
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
@@ -132,7 +136,7 @@ export default function MarketplacePage() {
 
       {/* Content */}
       {loading && <LoadingState message="Memuat listing..." />}
-      {error && <ErrorState message={error} onRetry={fetchListings} />}
+      {error && <ErrorState message={error} onRetry={handleRetry} />}
 
       {!loading && !error && listings.length === 0 && (
         <div className="text-center py-16">
