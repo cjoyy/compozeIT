@@ -29,23 +29,24 @@ export default function ImpactDashboardPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const fetchImpact = async () => {
-    setLoading(true);
-    setError(null);
-    try {
-      const res = await fetch('/api/impact');
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.message || 'Gagal memuat data dampak');
-      setStats(data);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Terjadi kesalahan');
-    } finally {
-      setLoading(false);
-    }
-  };
-
   useEffect(() => {
-    fetchImpact();
+    let active = true;
+    async function loadImpact() {
+      try {
+        const res = await fetch('/api/impact');
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.message || 'Gagal memuat data dampak');
+        if (active) setStats(data);
+      } catch (err) {
+        if (active) setError(err instanceof Error ? err.message : 'Terjadi kesalahan');
+      } finally {
+        if (active) setLoading(false);
+      }
+    }
+    loadImpact();
+    return () => {
+      active = false;
+    };
   }, []);
 
   if (loading) return <LoadingState message="Memuat Impact Dashboard..." className="py-20" />;

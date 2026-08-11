@@ -36,29 +36,29 @@ export default function MarketplacePage() {
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
   const [selectedListing, setSelectedListing] = useState<MarketplaceListing | null>(null);
 
-  const fetchListings = async () => {
-    setLoading(true);
-    setError(null);
-    try {
-      const params = new URLSearchParams();
-      if (filter !== 'all') params.set('product_type', filter);
-      params.set('sort_by', sortBy === 'price' ? 'price_per_kg' : 'stock_kg');
-      params.set('sort_order', sortOrder);
-
-      const res = await fetch(`/api/marketplace?${params}`);
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.message || 'Gagal memuat listing');
-      setListings(data.listings || []);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Terjadi kesalahan');
-    } finally {
-      setLoading(false);
-    }
-  };
-
   useEffect(() => {
-    fetchListings();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    let active = true;
+    async function loadListings() {
+      try {
+        const params = new URLSearchParams();
+        if (filter !== 'all') params.set('product_type', filter);
+        params.set('sort_by', sortBy === 'price' ? 'price_per_kg' : 'stock_kg');
+        params.set('sort_order', sortOrder);
+
+        const res = await fetch(`/api/marketplace?${params}`);
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.message || 'Gagal memuat listing');
+        if (active) setListings(data.listings || []);
+      } catch (err) {
+        if (active) setError(err instanceof Error ? err.message : 'Terjadi kesalahan');
+      } finally {
+        if (active) setLoading(false);
+      }
+    }
+    loadListings();
+    return () => {
+      active = false;
+    };
   }, [filter, sortBy, sortOrder]);
 
   return (

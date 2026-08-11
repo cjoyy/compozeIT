@@ -8,7 +8,6 @@ import { ErrorState } from '@/components/error-state';
 import { Button } from '@/components/ui/button';
 import {
   Upload,
-  CheckCircle2,
   Sprout,
   Clock,
   Lightbulb,

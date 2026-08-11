@@ -37,31 +37,29 @@ export default function B2BDashboardPage() {
   const { userId, userName } = useRole();
   const [submissions, setSubmissions] = useState<WasteSubmission[]>([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-
-  const fetchSubmissions = async () => {
-    setLoading(true);
-    setError(null);
-    try {
-      const res = await fetch(`/api/waste/submissions?user_id=${userId}&track=b2b`);
-      if (!res.ok) {
-        // If endpoint doesn't exist yet, use empty array
-        setSubmissions([]);
-        return;
-      }
-      const data = await res.json();
-      setSubmissions(data.submissions || []);
-    } catch {
-      // Non-critical: dashboard still shows with empty data
-      setSubmissions([]);
-    } finally {
-      setLoading(false);
-    }
-  };
+  const [error] = useState<string | null>(null);
 
   useEffect(() => {
-    fetchSubmissions();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    let active = true;
+    async function loadData() {
+      try {
+        const res = await fetch(`/api/waste/submissions?user_id=${userId}&track=b2b`);
+        if (!res.ok) {
+          if (active) setSubmissions([]);
+          return;
+        }
+        const data = await res.json();
+        if (active) setSubmissions(data.submissions || []);
+      } catch {
+        if (active) setSubmissions([]);
+      } finally {
+        if (active) setLoading(false);
+      }
+    }
+    loadData();
+    return () => {
+      active = false;
+    };
   }, [userId]);
 
   const totalKg = submissions.reduce((sum, s) => sum + Number(s.estimated_weight_kg || 0), 0);
