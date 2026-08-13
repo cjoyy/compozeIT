@@ -11,7 +11,14 @@ interface PickupTriggerRequest {
   threshold_kg?: number;
 }
 
-// Default threshold in kg — hardcoded per proposal assumption
+interface CreatedBatch {
+  id: string;
+  status: string;
+  total_weight_kg: number | string;
+  created_at: string;
+}
+
+// Default threshold in kg – hardcoded per proposal assumption
 // Documented: 50kg is the minimum viable batch for cost-effective pickup logistics
 const DEFAULT_THRESHOLD_KG = 50;
 
@@ -62,14 +69,14 @@ export async function POST(request: NextRequest) {
     // 3. Get user location for matching
     const { data: user, error: userError } = await supabase
       .from('users')
-      .select('location_lat, location_lng')
+      .select('type, location_lat, location_lng')
       .eq('id', body.user_id)
       .single();
 
-    if (userError || !user) {
+    if (userError || !user || user.type !== 'b2b') {
       console.error('[pickup] User not found:', userError);
       return NextResponse.json(
-        { error: 'USER_NOT_FOUND', message: 'User not found or missing location' },
+        { error: 'USER_NOT_FOUND', message: 'User not found or not a B2B user' },
         { status: 404 }
       );
     }
@@ -112,23 +119,23 @@ export async function POST(request: NextRequest) {
     }
 
     // 6. Create batch
-    const { data: batch, error: batchError } = await supabase
-      .from('batches')
-      .insert({
-        processor_id: processorMatch?.processor_id || processors?.[0]?.id,
-        total_weight_kg: totalPendingKg,
-        status: 'collecting',
+    const { data: rpcBatch, error: batchError } = await supabase
+      .rpc('create_batch_with_initial_timeline', {
+        p_processor_id: processorMatch?.processor_id || processors?.[0]?.id,
+        p_total_weight_kg: totalPendingKg,
+        p_note: 'Batch dibuat dari akumulasi submission B2B yang mencapai threshold pickup.',
       })
-      .select()
       .single();
 
-    if (batchError || !batch) {
+    if (batchError || !rpcBatch) {
       console.error('[pickup] Failed to create batch:', batchError);
       return NextResponse.json(
         { error: 'DATABASE_ERROR', message: 'Failed to create batch', details: batchError?.message },
         { status: 500 }
       );
     }
+
+    const batch = rpcBatch as CreatedBatch;
 
     // 7. Link submissions to batch & update status
     const submissionIds = (submissions || []).map((s) => s.id);
@@ -154,6 +161,10 @@ export async function POST(request: NextRequest) {
       threshold_kg: threshold,
       pickup_order: {
         id: batch.id,
+        batch: {
+          id: batch.id,
+          status: batch.status,
+        },
         submissions: submissionIds,
         estimated_total_kg: Math.round(totalPendingKg * 100) / 100,
         processor_match: processorMatch,

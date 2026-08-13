@@ -1,12 +1,9 @@
 'use client';
 
 import Link from 'next/link';
-import { useRole } from '@/components/role-provider';
 import {
   Leaf,
   Upload,
-  ShoppingBag,
-  Sprout,
   BarChart3,
   ArrowRight,
   Recycle,
@@ -15,8 +12,6 @@ import {
 } from 'lucide-react';
 
 export default function Home() {
-  const { role } = useRole();
-
   return (
     <div className="flex flex-col">
       {/* Hero Section */}
@@ -30,51 +25,30 @@ export default function Home() {
           <div className="text-center">
             <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-primary/20 bg-primary/5 px-4 py-1.5 text-xs font-medium text-primary">
               <Recycle className="h-3.5 w-3.5" />
-              AI-Powered Circular Economy Platform
+              Dari CEO Masa Depan untuk bisnis yang lebih bersih
             </div>
 
             <h1 className="text-4xl font-bold tracking-tight sm:text-5xl lg:text-6xl">
-              Sampah Makanan →{' '}
+              Sampah makanan jadi nilai baru{' '}
               <span className="bg-gradient-to-r from-primary to-chart-1 bg-clip-text text-transparent">
                 Sumber Daya Berharga
               </span>
             </h1>
 
             <p className="mx-auto mt-6 max-w-2xl text-lg text-muted-foreground leading-relaxed">
-              CompozeIT menghubungkan penghasil sampah makanan dengan fasilitas pemrosesan
-              menggunakan AI classification. Kurangi limbah ke TPA, hasilkan kompos &amp; pakan
-              berkualitas.
+              Foto sampah, tekan satu tombol, dan dapatkan hasil yang mudah dipahami.
+              CompozeIT membantu tim operasional mengurangi limbah dan menemukan nilai baru.
             </p>
 
             <div className="mt-10 flex flex-wrap justify-center gap-4">
-              {role === 'b2b' ? (
-                <Link
-                  href="/upload"
-                  className="inline-flex items-center gap-2 rounded-xl bg-primary px-6 py-3 text-sm font-semibold text-primary-foreground shadow-lg shadow-primary/25 transition-all hover:shadow-xl hover:shadow-primary/30 hover:-translate-y-0.5"
-                >
-                  <Upload className="h-4 w-4" />
-                  Upload Waste
-                  <ArrowRight className="h-4 w-4" />
-                </Link>
-              ) : (
-                <>
-                  <Link
-                    href="/sell-track"
-                    className="inline-flex items-center gap-2 rounded-xl bg-primary px-6 py-3 text-sm font-semibold text-primary-foreground shadow-lg shadow-primary/25 transition-all hover:shadow-xl hover:shadow-primary/30 hover:-translate-y-0.5"
-                  >
-                    <ShoppingBag className="h-4 w-4" />
-                    Jual Sampah
-                    <ArrowRight className="h-4 w-4" />
-                  </Link>
-                  <Link
-                    href="/diy-track"
-                    className="inline-flex items-center gap-2 rounded-xl border border-border bg-background px-6 py-3 text-sm font-semibold text-foreground transition-all hover:bg-muted hover:-translate-y-0.5"
-                  >
-                    <Sprout className="h-4 w-4" />
-                    DIY Kompos
-                  </Link>
-                </>
-              )}
+              <Link
+                href="/upload"
+                className="inline-flex items-center gap-2 rounded-xl bg-primary px-6 py-3 text-sm font-semibold text-primary-foreground shadow-lg shadow-primary/25 transition-all hover:shadow-xl hover:shadow-primary/30 hover:-translate-y-0.5"
+              >
+                <Upload className="h-4 w-4" />
+                Mulai Scan Sampah
+                <ArrowRight className="h-4 w-4" />
+              </Link>
             </div>
           </div>
         </div>
@@ -87,7 +61,7 @@ export default function Home() {
             Bagaimana CompozeIT Bekerja?
           </h2>
           <p className="mx-auto mt-3 max-w-xl text-center text-muted-foreground">
-            Dari foto sampah hingga produk bernilai — semua didukung AI
+            Dari foto sampai keputusan yang jelas, dibantu AI
           </p>
 
           <div className="mt-12 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
@@ -161,13 +135,13 @@ export default function Home() {
               <ArrowRight className="ml-auto h-4 w-4 text-muted-foreground group-hover:text-foreground transition-base" />
             </Link>
 
-            <Link href="/diy-track" className="group flex items-center gap-4 rounded-2xl border border-border bg-card p-5 transition-all hover:shadow-md hover:-translate-y-0.5 sm:col-span-2 lg:col-span-1">
+            <Link href="/upload" className="group flex items-center gap-4 rounded-2xl border border-border bg-card p-5 transition-all hover:shadow-md hover:-translate-y-0.5 sm:col-span-2 lg:col-span-1">
               <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-primary/10">
                 <Leaf className="h-5 w-5 text-primary" />
               </div>
               <div>
-                <h3 className="text-sm font-semibold">DIY Kompos</h3>
-                <p className="text-xs text-muted-foreground">Panduan kompos AI dari sampahmu</p>
+                <h3 className="text-sm font-semibold">Klasifikasi Limbah</h3>
+                <p className="text-xs text-muted-foreground">Scan limbah bisnis Anda dengan AI</p>
               </div>
               <ArrowRight className="ml-auto h-4 w-4 text-muted-foreground group-hover:text-foreground transition-base" />
             </Link>

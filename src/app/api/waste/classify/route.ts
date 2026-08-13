@@ -1,25 +1,31 @@
 // POST /api/waste/classify
 // Receives a food waste photo, classifies it using AI, and saves to database.
-// For 'sell' track: adds estimated_value and nearby collection points.
-// For 'b2b' track: auto-triggers pickup check after saving.
+// Exclusively handles B2B submissions and returns pickup-threshold status.
 
 import { NextRequest, NextResponse } from 'next/server';
 import { classifyWasteWithFallback } from '@/lib/ai/provider';
+import { calculateCashbackAmount } from '@/lib/cashback';
 import { getSupabaseServerClient } from '@/lib/db/supabase';
-import { haversineDistance } from '@/lib/matching/haversine';
 
 interface ClassifyRequestBody {
   image: string;     // base64-encoded image
   user_id: string;   // UUID
-  track: 'sell' | 'diy' | 'b2b';
-  lat?: number;      // user location for sell track matching
-  lng?: number;
+  track: 'b2b';
 }
 
-// Estimated value per kg of food waste for sell track
-// Assumption: Rp 150/kg based on proposal market analysis
-// Documented for judges Q&A
-const SELL_PRICE_PER_KG = 150;
+interface WasteSubmissionWithCashback {
+  id: string;
+  waste_type: string;
+  estimated_weight_kg: number | string;
+  cashback_amount: number | string;
+  is_contaminated: boolean;
+  contaminant_type: string | null;
+  confidence: number | string;
+  track: string;
+  status: string;
+  created_at: string;
+  user_cashback_balance: number | string;
+}
 
 // B2B pickup threshold in kg
 const B2B_THRESHOLD_KG = 50;
@@ -43,10 +49,9 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const validTracks = ['sell', 'diy', 'b2b'];
-    if (!body.track || !validTracks.includes(body.track)) {
+    if (body.track !== 'b2b') {
       return NextResponse.json(
-        { error: 'INVALID_TRACK', message: `Field "track" must be one of: ${validTracks.join(', ')}` },
+        { error: 'INVALID_TRACK', message: 'Field "track" must be "b2b"' },
         { status: 400 }
       );
     }
@@ -87,42 +92,43 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    console.log(`[classify] Success via ${providerUsed}:`, classificationResult);
-
-    // 3. Set status based on track
-    const status = body.track === 'diy' ? 'completed' : 'pending';
+    const status = 'pending';
+    const cashbackAmount = calculateCashbackAmount(
+      Number(classificationResult.estimated_weight_kg || 0)
+    );
 
     // 4. Save to Supabase
     const supabase = getSupabaseServerClient();
 
-    const { data, error: dbError } = await supabase
-      .from('waste_submissions')
-      .insert({
-        user_id: body.user_id,
-        waste_type: classificationResult.waste_type,
-        estimated_weight_kg: classificationResult.estimated_weight_kg,
-        is_contaminated: classificationResult.is_contaminated,
-        contaminant_type: classificationResult.contaminant_type,
-        confidence: classificationResult.confidence,
-        track: body.track,
-        status,
+    const { data: rpcData, error: dbError } = await supabase
+      .rpc('create_b2b_waste_submission_with_cashback', {
+        p_user_id: body.user_id,
+        p_waste_type: classificationResult.waste_type,
+        p_estimated_weight_kg: classificationResult.estimated_weight_kg,
+        p_cashback_amount: cashbackAmount,
+        p_is_contaminated: classificationResult.is_contaminated,
+        p_contaminant_type: classificationResult.contaminant_type,
+        p_confidence: classificationResult.confidence,
+        p_track: body.track,
+        p_status: status,
       })
-      .select()
       .single();
 
-    if (dbError) {
+    if (dbError || !rpcData) {
       console.error('[classify] Database error:', dbError);
       return NextResponse.json(
         {
           error: 'DATABASE_ERROR',
           message: 'Failed to save classification result',
-          details: dbError.message,
+          details: dbError?.message,
         },
         { status: 500 }
       );
     }
 
-    // 5. Build response based on track
+    const data = rpcData as WasteSubmissionWithCashback;
+
+    // 5. Build B2B response
     const response: Record<string, unknown> = {
       id: data.id,
       waste_type: data.waste_type,
@@ -132,64 +138,35 @@ export async function POST(request: NextRequest) {
       confidence: data.confidence,
       track: data.track,
       status: data.status,
+      cashback_amount: Number(data.cashback_amount || cashbackAmount),
+      user_cashback_balance: Number(data.user_cashback_balance || 0),
       created_at: data.created_at,
       _meta: {
         ai_provider: providerUsed,
       },
     };
 
-    // 5a. Sell track: add estimated value and nearby collection points
-    if (body.track === 'sell') {
-      const weight = Number(classificationResult.estimated_weight_kg) || 0;
-      const estVal = Math.round(weight * SELL_PRICE_PER_KG);
-      response.estimated_value = estVal;
-      response.estimated_value_formatted = `Rp ${estVal.toLocaleString('id-ID')}`;
+    try {
+      // Check pending submissions total
+      const { data: pendingSubs } = await supabase
+        .from('waste_submissions')
+        .select('estimated_weight_kg')
+        .eq('user_id', body.user_id)
+        .eq('track', 'b2b')
+        .eq('status', 'pending');
 
-      // Find nearby collection points if user location is provided
-      if (body.lat && body.lng) {
-        const { data: processors } = await supabase.from('processors').select('*');
-        if (processors && processors.length > 0) {
-          const nearby = processors
-            .filter((p) => Number(p.current_load_kg) < Number(p.capacity_kg))
-            .map((p) => ({
-              processor_id: p.id,
-              name: p.name,
-              type: p.type,
-              distance_km: Math.round(haversineDistance(body.lat!, body.lng!, p.lat, p.lng) * 10) / 10,
-              accepts_waste_type: (p.accepted_waste_types || []).includes(classificationResult.waste_type),
-            }))
-            .sort((a, b) => a.distance_km - b.distance_km)
-            .slice(0, 3);
+      const totalPendingKg = (pendingSubs || []).reduce(
+        (sum, s) => sum + Number(s.estimated_weight_kg || 0),
+        0
+      );
 
-          response.nearby_collection_points = nearby;
-        }
-      }
-    }
-
-    // 5b. B2B track: auto-trigger pickup check
-    if (body.track === 'b2b') {
-      try {
-        // Check pending submissions total
-        const { data: pendingSubs } = await supabase
-          .from('waste_submissions')
-          .select('estimated_weight_kg')
-          .eq('user_id', body.user_id)
-          .eq('track', 'b2b')
-          .eq('status', 'pending');
-
-        const totalPendingKg = (pendingSubs || []).reduce(
-          (sum, s) => sum + Number(s.estimated_weight_kg || 0),
-          0
-        );
-
-        response.b2b_status = {
-          total_pending_kg: Math.round(totalPendingKg * 100) / 100,
-          threshold_kg: B2B_THRESHOLD_KG,
-          threshold_reached: totalPendingKg >= B2B_THRESHOLD_KG,
-        };
-      } catch (triggerErr) {
-        console.warn('[classify] Auto-trigger check failed (non-blocking):', triggerErr);
-      }
+      response.b2b_status = {
+        total_pending_kg: Math.round(totalPendingKg * 100) / 100,
+        threshold_kg: B2B_THRESHOLD_KG,
+        threshold_reached: totalPendingKg >= B2B_THRESHOLD_KG,
+      };
+    } catch (triggerErr) {
+      console.warn('[classify] Auto-trigger check failed (non-blocking):', triggerErr);
     }
 
     return NextResponse.json(response);

@@ -1,4 +1,4 @@
-# CompozeIT — API Contract Documentation
+# CompozeIT – API Contract Documentation
 
 > Dokumen ini adalah single source of truth untuk semua endpoint API. **Selalu cek dokumen ini sebelum membuat keputusan struktur data/API baru.**
 
@@ -17,8 +17,8 @@ interface ErrorResponse {
 // Waste types recognized by the system
 type WasteType = 'nasi' | 'sayur' | 'protein' | 'buah' | 'campuran' | 'lainnya';
 
-// Track options for waste submission
-type TrackType = 'sell' | 'diy' | 'b2b';
+// The application accepts B2B waste submissions only.
+type TrackType = 'b2b';
 
 // Contaminant types
 type ContaminantType = 'plastik' | 'logam' | 'kaca' | 'lainnya' | null;
@@ -36,7 +36,7 @@ type ContaminantType = 'plastik' | 'logam' | 'kaca' | 'lainnya' | null;
 interface ClassifyRequest {
   image: string;        // base64-encoded image (JPEG/PNG)
   user_id: string;      // UUID of the user
-  track: TrackType;     // which track: 'sell', 'diy', or 'b2b'
+  track: TrackType;     // must be 'b2b'
 }
 ```
 
@@ -47,11 +47,22 @@ interface ClassifyResponse {
   id: string;                           // UUID of created waste_submission
   waste_type: WasteType;
   estimated_weight_kg: number;
+  cashback_amount: number;                // estimated_weight_kg * Rp1.000/kg
+  user_cashback_balance: number;          // user's balance after this submission
   is_contaminated: boolean;
   contaminant_type: ContaminantType;
   confidence: number;                   // 0-1
   track: TrackType;
+  status: 'pending';
   created_at: string;                   // ISO 8601 timestamp
+  b2b_status?: {
+    total_pending_kg: number;
+    threshold_kg: number;
+    threshold_reached: boolean;
+  };
+  _meta: {
+    ai_provider: string;
+  };
 }
 ```
 
@@ -80,11 +91,22 @@ interface ClassifyResponse {
   "id": "d290f1ee-6c54-4b01-90e6-d701748f0851",
   "waste_type": "sayur",
   "estimated_weight_kg": 2.5,
+  "cashback_amount": 2500,
+  "user_cashback_balance": 12500,
   "is_contaminated": false,
   "contaminant_type": null,
   "confidence": 0.87,
   "track": "b2b",
-  "created_at": "2026-08-10T15:30:00.000Z"
+  "status": "pending",
+  "created_at": "2026-08-10T15:30:00.000Z",
+  "b2b_status": {
+    "total_pending_kg": 2.5,
+    "threshold_kg": 50,
+    "threshold_reached": false
+  },
+  "_meta": {
+    "ai_provider": "ollama"
+  }
 }
 ```
 
@@ -123,6 +145,10 @@ interface PickupTriggerResponse {
     id: string;                    // UUID of generated pickup order
     submissions: string[];         // UUIDs of waste_submissions included
     estimated_total_kg: number;
+    batch?: {
+      id: string;
+      status: BatchStatus;
+    };
     processor_match?: {
       processor_id: string;
       processor_name: string;
@@ -131,6 +157,15 @@ interface PickupTriggerResponse {
     created_at: string;
   };
 }
+
+type BatchStatus =
+  | 'submitted'
+  | 'picked_up'
+  | 'processing'
+  | 'completed'
+  | 'sold';
+
+// Batch lifecycle is intentionally simple for the MVP traceability timeline.
 ```
 
 ### Error Responses
@@ -151,7 +186,7 @@ interface PickupTriggerResponse {
 }
 ```
 
-**Response (200 — threshold met):**
+**Response (200 – threshold met):**
 ```json
 {
   "triggered": true,
@@ -174,7 +209,7 @@ interface PickupTriggerResponse {
 }
 ```
 
-**Response (200 — threshold not met):**
+**Response (200 – threshold not met):**
 ```json
 {
   "triggered": false,
@@ -276,11 +311,170 @@ Default weights: distance=0.5, capacity=0.3, type_penalty=0.2
 
 ---
 
-## 4. GET/POST `/api/marketplace`
+## 4. POST `/api/cashback/apply`
 
-### GET `/api/marketplace` — List Listings
+**Description:** Simulasi penggunaan saldo cashback B2B untuk renewal subscription. Cashback dihitung dari submission REAL dengan asumsi Rp1.000/kg. Fee renewal demo adalah Rp300.000/bulan.
 
-**Description:** Mengambil semua marketplace listings, dengan optional filter.
+### Request Body
+
+```typescript
+interface CashbackApplyRequest {
+  user_id: string; // UUID of the B2B user
+}
+```
+
+### Response Body (200 OK)
+
+```typescript
+interface CashbackApplyResponse {
+  success: true;
+  data: {
+    applied: boolean;
+    applied_amount?: 300000;
+    reason?: 'INSUFFICIENT_BALANCE';
+    required_amount?: 300000;
+    current_balance?: number;
+    remaining_balance: number;
+    subscription_status: 'active' | 'renewal_due';
+  };
+}
+```
+
+### Error Responses
+
+| Status | When |
+|--------|------|
+| 400 | Missing/invalid `user_id` |
+| 404 | User not found or user is not B2B type |
+| 500 | Internal server error |
+
+### Example
+
+**Request:**
+```json
+{
+  "user_id": "f47ac10b-58cc-4372-a567-0e02b2c3d479"
+}
+```
+
+**Response (200 – applied):**
+```json
+{
+  "success": true,
+  "data": {
+    "applied": true,
+    "applied_amount": 300000,
+    "remaining_balance": 25000,
+    "subscription_status": "active"
+  }
+}
+```
+
+**Response (200 – insufficient balance):**
+```json
+{
+  "success": true,
+  "data": {
+    "applied": false,
+    "reason": "INSUFFICIENT_BALANCE",
+    "required_amount": 300000,
+    "current_balance": 2500,
+    "remaining_balance": 2500,
+    "subscription_status": "renewal_due"
+  }
+}
+```
+
+---
+
+## 5. GET/PATCH `/api/batch/:id/timeline`
+
+### GET `/api/batch/:id/timeline` – Batch Timeline
+
+**Description:** Mengambil histori status batch untuk traceability sederhana. Histori berasal dari tabel `batch_status_events`.
+
+#### Response Body (200 OK)
+
+```typescript
+interface BatchTimelineResponse {
+  success: true;
+  data: {
+    batch: {
+      id: string;
+      status: BatchStatus;
+      total_weight_kg: number;
+      processor_name: string | null;
+      created_at: string;
+      completed_at: string | null;
+    };
+    timeline: BatchTimelineEvent[];
+  };
+}
+
+interface BatchTimelineEvent {
+  id: string;
+  status: BatchStatus;
+  note: string | null;
+  created_at: string;
+}
+```
+
+### PATCH `/api/batch/:id/timeline` – Manual Status Update
+
+**Description:** Endpoint admin sederhana untuk update status batch dan mencatat event timeline baru.
+
+#### Request Body
+
+```typescript
+interface BatchTimelineUpdateRequest {
+  status: BatchStatus;
+  note?: string;
+}
+```
+
+#### Response Body (200 OK)
+
+```typescript
+interface BatchTimelineUpdateResponse {
+  success: true;
+  data: {
+    batch: {
+      id: string;
+      status: BatchStatus;
+      total_weight_kg: number;
+      created_at: string;
+      completed_at: string | null;
+    };
+    event: BatchTimelineEvent;
+  };
+}
+```
+
+### Error Responses
+
+| Status | When |
+|--------|------|
+| 400 | Invalid `status` |
+| 404 | Batch not found |
+| 500 | Internal server error |
+
+### Example
+
+**PATCH Request:**
+```json
+{
+  "status": "processing",
+  "note": "Batch masuk fasilitas EcoCompost Jakarta Selatan."
+}
+```
+
+---
+
+## 6. GET `/api/marketplace`
+
+### GET `/api/marketplace` – List Read-only Listings
+
+**Description:** Mengambil marketplace listings dari seed data, dengan optional filter. Marketplace Phase 3 adalah mockup read-only; tidak ada endpoint create/update transaction di scope B2B-only demo.
 
 #### Query Parameters
 
@@ -288,7 +482,7 @@ Default weights: distance=0.5, capacity=0.3, type_penalty=0.2
 interface MarketplaceListParams {
   product_type?: 'compost' | 'bsf';     // filter by product type
   min_stock_kg?: number;                  // minimum stock available
-  sort_by?: 'price' | 'stock' | 'created_at'; // sort field
+  sort_by?: 'price_per_kg' | 'stock_kg' | 'created_at'; // sort field
   sort_order?: 'asc' | 'desc';           // sort direction (default: desc)
   limit?: number;                          // pagination (default: 20)
   offset?: number;                         // pagination (default: 0)
@@ -316,51 +510,18 @@ interface MarketplaceListing {
 }
 ```
 
-### POST `/api/marketplace` — Create Listing
-
-**Description:** Buat marketplace listing baru (oleh processor).
-
-#### Request Body
-
-```typescript
-interface MarketplaceCreateRequest {
-  processor_id: string;
-  product_type: 'compost' | 'bsf';
-  price_per_kg: number;
-  stock_kg: number;
-  npk_content?: string;
-  description?: string;
-}
-```
-
-#### Response Body (201 Created)
-
-```typescript
-interface MarketplaceCreateResponse {
-  id: string;
-  processor_id: string;
-  product_type: 'compost' | 'bsf';
-  price_per_kg: number;
-  stock_kg: number;
-  npk_content: string | null;
-  description: string | null;
-  created_at: string;
-}
-```
-
 ### Error Responses
 
 | Status | When |
 |--------|------|
-| 400 | Missing required fields in POST body |
-| 404 | Processor not found (POST) |
+| 400 | Invalid query parameter |
 | 500 | Internal server error |
 
 ### Example
 
 **GET Request:**
 ```
-GET /api/marketplace?product_type=compost&min_stock_kg=100&sort_by=price&sort_order=asc
+GET /api/marketplace?product_type=compost&min_stock_kg=100&sort_by=price_per_kg&sort_order=asc
 ```
 
 **GET Response (200):**
@@ -375,7 +536,7 @@ GET /api/marketplace?product_type=compost&min_stock_kg=100&sort_by=price&sort_or
       "price_per_kg": 2000,
       "stock_kg": 400.0,
       "npk_content": "7-3-5",
-      "description": "Kasgot ekonomis — pupuk organik untuk lahan pertanian.",
+      "description": "Kasgot ekonomis – pupuk organik untuk lahan pertanian.",
       "created_at": "2026-08-10T10:00:00.000Z"
     }
   ],
@@ -383,121 +544,7 @@ GET /api/marketplace?product_type=compost&min_stock_kg=100&sort_by=price&sort_or
 }
 ```
 
-**POST Request:**
-```json
-{
-  "processor_id": "a1b2c3d4-1111-4000-8000-000000000001",
-  "product_type": "compost",
-  "price_per_kg": 3500,
-  "stock_kg": 200,
-  "npk_content": "12-5-8",
-  "description": "Kompos premium dari sisa makanan restoran"
-}
-```
-
-**POST Response (201):**
-```json
-{
-  "id": "b2c3d4e5-2222-4000-8000-000000000016",
-  "processor_id": "a1b2c3d4-1111-4000-8000-000000000001",
-  "product_type": "compost",
-  "price_per_kg": 3500,
-  "stock_kg": 200.0,
-  "npk_content": "12-5-8",
-  "description": "Kompos premium dari sisa makanan restoran",
-  "created_at": "2026-08-10T16:00:00.000Z"
-}
-```
-
 ---
-
-## 5. POST `/api/waste/diy-guide`
-
-**Description:** Berikan panduan DIY self-composting dan rekomendasi tanaman berdasarkan jenis waste. Menggunakan AI text generation.
-
-### Request Body
-
-```typescript
-interface DIYGuideRequest {
-  waste_type: WasteType;
-  weight_kg?: number;       // optional context for the AI
-}
-```
-
-### Response Body (200 OK)
-
-```typescript
-interface DIYGuideResponse {
-  waste_type: WasteType;
-  guide: {
-    title: string;
-    steps: string[];          // ordered list of composting steps
-    duration_days: number;    // estimated composting duration
-    tips: string[];           // additional tips
-  };
-  recommended_plants: {
-    name: string;
-    reason: string;
-  }[];
-}
-```
-
-### Error Responses
-
-| Status | When |
-|--------|------|
-| 400 | Missing/invalid `waste_type` |
-| 500 | AI provider error or internal server error |
-
-### Example
-
-**Request:**
-```json
-{
-  "waste_type": "sayur",
-  "weight_kg": 2.0
-}
-```
-
-**Response (200):**
-```json
-{
-  "waste_type": "sayur",
-  "guide": {
-    "title": "Panduan Kompos dari Sisa Sayuran",
-    "steps": [
-      "Potong sisa sayuran menjadi ukuran kecil (2-3 cm) untuk mempercepat dekomposisi.",
-      "Siapkan wadah kompos dengan lubang aerasi di bagian bawah dan samping.",
-      "Letakkan lapisan pertama: material kering (daun kering, serutan kayu, kardus) setebal 5 cm.",
-      "Tambahkan sisa sayuran sebagai lapisan hijau (nitrogen-rich).",
-      "Tutup dengan lapisan cokelat (material kering) lagi.",
-      "Semprot air hingga lembap (seperti spons yang diperas).",
-      "Aduk setiap 3-4 hari untuk aerasi.",
-      "Kompos siap pakai dalam 30-45 hari ketika berwarna gelap, berbau tanah, dan tekstur remah."
-    ],
-    "duration_days": 35,
-    "tips": [
-      "Hindari memasukkan sayuran yang sudah terkontaminasi minyak goreng berlebih.",
-      "Rasio ideal: 3 bagian cokelat (karbon) : 1 bagian hijau (nitrogen).",
-      "Jaga kelembapan — terlalu basah menyebabkan bau, terlalu kering memperlambat proses."
-    ]
-  },
-  "recommended_plants": [
-    {
-      "name": "Kangkung",
-      "reason": "Tumbuh cepat dan menyukai tanah kaya nitrogen dari kompos sayuran."
-    },
-    {
-      "name": "Bayam",
-      "reason": "Cocok dengan kompos sayur yang kaya nutrisi, panen dalam 25-30 hari."
-    },
-    {
-      "name": "Tomat Cherry",
-      "reason": "Responsif terhadap kompos organik, cocok untuk pot di rumah."
-    }
-  ]
-}
-```
 
 ---
 

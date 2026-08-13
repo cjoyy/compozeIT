@@ -1,34 +1,26 @@
 'use client';
 
-import { createContext, useContext, useState, ReactNode } from 'react';
-
-type Role = 'b2b' | 'b2c';
+import { createContext, useContext, ReactNode } from 'react';
 
 interface RoleContextType {
-  role: Role;
-  setRole: (role: Role) => void;
   userId: string;
   userName: string;
 }
 
-// Demo user IDs — matches seed.sql
-const DEMO_USERS: Record<Role, { id: string; name: string }> = {
-  b2b: { id: 'd0d0d0d0-demo-4000-8000-000000000001', name: 'Restoran Hijau Nusantara' },
-  b2c: { id: 'd0d0d0d0-demo-4000-8000-000000000002', name: 'Budi Santoso' },
+// Demo B2B user ID – matches seed.sql.
+const DEMO_USER = {
+  id: 'd0d0d0d0-0000-4000-8000-000000000001',
+  name: 'Restoran Hijau Nusantara',
 };
 
 const RoleContext = createContext<RoleContextType | undefined>(undefined);
 
 export function RoleProvider({ children }: { children: ReactNode }) {
-  const [role, setRole] = useState<Role>('b2c');
-
   return (
     <RoleContext.Provider
       value={{
-        role,
-        setRole,
-        userId: DEMO_USERS[role].id,
-        userName: DEMO_USERS[role].name,
+        userId: DEMO_USER.id,
+        userName: DEMO_USER.name,
       }}
     >
       {children}
