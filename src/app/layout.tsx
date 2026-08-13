@@ -14,8 +14,8 @@ export const metadata: Metadata = {
   description:
     "Platform sederhana untuk membantu bisnis mengelola sampah makanan dengan AI.",
   icons: {
-    icon: "/logo.png",
-    apple: "/logo.png",
+    icon: "/icon.svg",
+    apple: "/icon.svg",
   },
 };
 

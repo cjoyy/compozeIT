@@ -5,6 +5,7 @@ import { useRole } from '@/components/role-provider';
 import { LoadingState } from '@/components/loading-state';
 import { QRCodeSVG } from 'qrcode.react';
 import { fetchWithTimeout } from '@/lib/fetch-with-timeout';
+import { DEMO_SUMMARY_SUBMISSIONS } from '@/lib/demo-summary';
 import {
   TrendingDown,
   Leaf,
@@ -37,6 +38,7 @@ export default function B2BDashboardPage() {
   const { userId, userName } = useRole();
   const [submissions, setSubmissions] = useState<WasteSubmission[]>([]);
   const [loading, setLoading] = useState(true);
+  const [isDemoData, setIsDemoData] = useState(false);
 
   useEffect(() => {
     let active = true;
@@ -44,13 +46,23 @@ export default function B2BDashboardPage() {
       try {
         const res = await fetchWithTimeout(`/api/waste/submissions?user_id=${userId}&track=b2b`, {}, 2500);
         if (!res.ok) {
-          if (active) setSubmissions([]);
+          if (active) {
+            setSubmissions([...DEMO_SUMMARY_SUBMISSIONS]);
+            setIsDemoData(true);
+          }
           return;
         }
         const data = await res.json();
-        if (active) setSubmissions(data.submissions || []);
+        if (active) {
+          const liveSubmissions = data.submissions || [];
+          setSubmissions(liveSubmissions.length > 0 ? liveSubmissions : [...DEMO_SUMMARY_SUBMISSIONS]);
+          setIsDemoData(liveSubmissions.length === 0);
+        }
       } catch {
-        if (active) setSubmissions([]);
+        if (active) {
+          setSubmissions([...DEMO_SUMMARY_SUBMISSIONS]);
+          setIsDemoData(true);
+        }
       } finally {
         if (active) setLoading(false);
       }
@@ -90,6 +102,11 @@ export default function B2BDashboardPage() {
       <div className="mb-8">
         <h1 className="text-2xl font-bold tracking-tight">B2B Dashboard</h1>
         <p className="mt-1 text-sm text-muted-foreground">{userName}</p>
+        {isDemoData && (
+          <p className="mt-3 inline-flex rounded-full bg-amber-100 px-3 py-1 text-xs font-medium text-amber-900">
+            Ringkasan contoh demo · data live akan muncul saat koneksi database tersedia
+          </p>
+        )}
       </div>
 
       {/* Stats Cards */}
