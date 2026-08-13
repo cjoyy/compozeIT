@@ -11,6 +11,8 @@ import {
   Package,
   ArrowUpDown,
   X,
+  ClipboardList,
+  ShieldCheck,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -41,6 +43,8 @@ export default function MarketplacePage() {
   useEffect(() => {
     let active = true;
     async function loadListings() {
+      setLoading(true);
+      setError(null);
       try {
         const params = new URLSearchParams();
         if (filter !== 'all') params.set('product_type', filter);
@@ -67,11 +71,21 @@ export default function MarketplacePage() {
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
-      <div className="mb-8">
-        <h1 className="text-2xl font-bold tracking-tight">Marketplace</h1>
-        <p className="mt-1 text-sm text-muted-foreground">
-          Beli kompos premium dan pakan BSF berkualitas dari fasilitas pemrosesan terpercaya.
-        </p>
+      <div className="mb-8 flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
+        <div>
+          <div className="mb-3 inline-flex items-center gap-2 rounded-full border border-chart-4/20 bg-chart-4/5 px-3 py-1 text-xs font-medium text-chart-4">
+            <ClipboardList className="h-3.5 w-3.5" />
+            Read-only marketplace mockup
+          </div>
+          <h1 className="text-2xl font-bold tracking-tight">Marketplace Catalog</h1>
+          <p className="mt-1 max-w-2xl text-sm text-muted-foreground">
+            Katalog hasil olahan dari seed processor. Transaksi dibuat read-only untuk demo B2B-only.
+          </p>
+        </div>
+        <div className="inline-flex items-center gap-2 rounded-lg border border-primary/20 bg-primary/5 px-4 py-3 text-sm font-medium text-primary">
+          <ShieldCheck className="h-4 w-4" />
+          Seed data catalog
+        </div>
       </div>
 
       {/* Filters */}
@@ -92,7 +106,7 @@ export default function MarketplacePage() {
                   : 'text-muted-foreground hover:text-foreground'
               )}
             >
-              {f === 'all' ? 'Semua' : f === 'compost' ? '🌿 Kompos' : '🐛 BSF'}
+              {f === 'all' ? 'Semua' : f === 'compost' ? 'Kompos' : 'BSF Feed'}
             </button>
           ))}
         </div>
@@ -162,7 +176,7 @@ export default function MarketplacePage() {
                     : 'bg-chart-4/10 text-chart-4'
                 )}>
                   {listing.product_type === 'compost' ? <Leaf className="h-3 w-3" /> : <Package className="h-3 w-3" />}
-                  {listing.product_type === 'compost' ? 'Kompos' : 'BSF'}
+                  {listing.product_type === 'compost' ? 'Kompos' : 'BSF Feed'}
                 </span>
                 {listing.npk_content && (
                   <span className="text-xs text-muted-foreground">NPK: {listing.npk_content}</span>
@@ -181,7 +195,7 @@ export default function MarketplacePage() {
                   <p className="text-xs text-muted-foreground">/kg</p>
                 </div>
                 <p className="text-xs text-muted-foreground">
-                  Stok: {listing.stock_kg} kg
+                  Stok: {Number(listing.stock_kg).toLocaleString('id-ID')} kg
                 </p>
               </div>
 
@@ -205,7 +219,7 @@ export default function MarketplacePage() {
                 'inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-medium',
                 selectedListing.product_type === 'compost' ? 'bg-primary/10 text-primary' : 'bg-chart-4/10 text-chart-4'
               )}>
-                {selectedListing.product_type === 'compost' ? '🌿 Kompos' : '🐛 BSF'}
+                {selectedListing.product_type === 'compost' ? 'Kompos' : 'BSF Feed'}
               </span>
               <button onClick={() => setSelectedListing(null)} className="p-1.5 rounded-lg hover:bg-muted transition-base">
                 <X className="h-4 w-4" />
@@ -237,8 +251,8 @@ export default function MarketplacePage() {
               <p className="text-sm font-medium">🏭 {selectedListing.processor_name}</p>
             </div>
 
-            <Button className="w-full mt-5 h-11 rounded-xl text-sm font-semibold">
-              Hubungi Penjual
+            <Button className="w-full mt-5 h-11 rounded-xl text-sm font-semibold" disabled>
+              Transaksi marketplace: mockup read-only
             </Button>
           </div>
         </div>

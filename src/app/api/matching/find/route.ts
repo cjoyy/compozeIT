@@ -13,7 +13,7 @@ interface MatchingFindRequest {
   weight_kg?: number;
 }
 
-// Scoring weights — documented for judges Q&A
+// Scoring weights – documented for judges Q&A
 // w1=0.5 (distance is most important for logistics cost)
 // w2=0.3 (available capacity ensures processor can handle the waste)
 // w3=0.2 (waste type match ensures proper processing)

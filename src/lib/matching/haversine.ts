@@ -1,5 +1,5 @@
-// CompozeIT — Haversine Distance Calculator
-// Manual implementation — intentionally not using Google Maps API
+// CompozeIT – Haversine Distance Calculator
+// Manual implementation – intentionally not using Google Maps API
 
 /**
  * Calculate the distance between two points on Earth using the Haversine formula.

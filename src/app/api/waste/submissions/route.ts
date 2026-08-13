@@ -21,7 +21,7 @@ export async function GET(request: NextRequest) {
 
     let query = supabase
       .from('waste_submissions')
-      .select('id, waste_type, estimated_weight_kg, is_contaminated, contaminant_type, confidence, track, status, created_at')
+      .select('id, waste_type, estimated_weight_kg, cashback_amount, is_contaminated, contaminant_type, confidence, track, status, created_at')
       .eq('user_id', user_id)
       .order('created_at', { ascending: false });
 

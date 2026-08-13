@@ -1,4 +1,4 @@
-// CompozeIT — Supabase Client
+// CompozeIT – Supabase Client
 // Server-side and client-side Supabase clients
 
 import { createClient, SupabaseClient } from '@supabase/supabase-js';

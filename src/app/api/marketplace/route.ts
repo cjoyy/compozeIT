@@ -1,6 +1,6 @@
-// GET/POST /api/marketplace
+// GET /api/marketplace
 // GET: List marketplace listings with filters, sort, pagination. Joins with processors.
-// POST: Create a new marketplace listing.
+// Marketplace is read-only in the B2B-only demo scope.
 
 import { NextRequest, NextResponse } from 'next/server';
 import { getSupabaseServerClient } from '@/lib/db/supabase';
@@ -87,87 +87,6 @@ export async function GET(request: NextRequest) {
     });
   } catch (error) {
     console.error('[marketplace] GET Unexpected error:', error);
-    return NextResponse.json(
-      { error: 'INTERNAL_ERROR', message: 'An unexpected error occurred', details: error instanceof Error ? error.message : String(error) },
-      { status: 500 }
-    );
-  }
-}
-
-export async function POST(request: NextRequest) {
-  try {
-    const body = await request.json();
-
-    // Validate required fields
-    if (!body.processor_id || typeof body.processor_id !== 'string') {
-      return NextResponse.json(
-        { error: 'INVALID_PROCESSOR_ID', message: 'Field "processor_id" is required' },
-        { status: 400 }
-      );
-    }
-
-    if (!body.product_type || !['compost', 'bsf'].includes(body.product_type)) {
-      return NextResponse.json(
-        { error: 'INVALID_PRODUCT_TYPE', message: 'Field "product_type" must be "compost" or "bsf"' },
-        { status: 400 }
-      );
-    }
-
-    if (typeof body.price_per_kg !== 'number' || body.price_per_kg <= 0) {
-      return NextResponse.json(
-        { error: 'INVALID_PRICE', message: 'Field "price_per_kg" must be a positive number' },
-        { status: 400 }
-      );
-    }
-
-    if (typeof body.stock_kg !== 'number' || body.stock_kg <= 0) {
-      return NextResponse.json(
-        { error: 'INVALID_STOCK', message: 'Field "stock_kg" must be a positive number' },
-        { status: 400 }
-      );
-    }
-
-    const supabase = getSupabaseServerClient();
-
-    // Verify processor exists
-    const { data: processor, error: procError } = await supabase
-      .from('processors')
-      .select('id')
-      .eq('id', body.processor_id)
-      .single();
-
-    if (procError || !processor) {
-      return NextResponse.json(
-        { error: 'PROCESSOR_NOT_FOUND', message: 'Processor not found' },
-        { status: 404 }
-      );
-    }
-
-    // Create listing
-    const { data, error: insertError } = await supabase
-      .from('marketplace_listings')
-      .insert({
-        processor_id: body.processor_id,
-        product_type: body.product_type,
-        price_per_kg: body.price_per_kg,
-        stock_kg: body.stock_kg,
-        npk_content: body.npk_content || null,
-        description: body.description || null,
-      })
-      .select()
-      .single();
-
-    if (insertError) {
-      console.error('[marketplace] POST DB error:', insertError);
-      return NextResponse.json(
-        { error: 'DATABASE_ERROR', message: 'Failed to create listing', details: insertError.message },
-        { status: 500 }
-      );
-    }
-
-    return NextResponse.json(data, { status: 201 });
-  } catch (error) {
-    console.error('[marketplace] POST Unexpected error:', error);
     return NextResponse.json(
       { error: 'INTERNAL_ERROR', message: 'An unexpected error occurred', details: error instanceof Error ? error.message : String(error) },
       { status: 500 }

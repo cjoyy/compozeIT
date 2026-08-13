@@ -14,7 +14,7 @@ import {
   Package,
 } from 'lucide-react';
 
-// Cost assumptions — documented for judges Q&A:
+// Cost assumptions – documented for judges Q&A:
 // Biaya pembuangan konvensional: Rp 500/kg (rata-rata tipping fee TPA di Jabodetabek)
 // Sumber: estimasi berdasarkan data Kementerian LHK 2023
 const CONVENTIONAL_COST_PER_KG = 500;
