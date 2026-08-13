@@ -48,7 +48,7 @@
   --radius-4xl: calc(var(--radius) * 2.6);
 }
 
-/* CompozeIT Brand Theme — Green / Circular Economy */
+/* CompozeIT Brand Theme – Green / Circular Economy */
 :root {
   --background: oklch(0.98 0.005 155);
   --foreground: oklch(0.15 0.02 155);

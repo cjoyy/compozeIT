@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useState, useRef, type ChangeEvent, type DragEvent } from 'react';
+import { useCallback, useEffect, useState, useRef, type ChangeEvent, type DragEvent } from 'react';
 import { Upload, X, Camera } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -8,12 +8,34 @@ interface ImageUploadProps {
   onImageSelect: (base64: string) => void;
   disabled?: boolean;
   className?: string;
+  sampleUrl?: string | null;
 }
 
-export function ImageUpload({ onImageSelect, disabled, className }: ImageUploadProps) {
+export function ImageUpload({ onImageSelect, disabled, className, sampleUrl }: ImageUploadProps) {
   const [preview, setPreview] = useState<string | null>(null);
   const [isDragging, setIsDragging] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    if (!sampleUrl) return;
+    let cancelled = false;
+    fetch(sampleUrl)
+      .then((response) => response.blob())
+      .then((blob) => {
+        if (cancelled) return;
+        const reader = new FileReader();
+        reader.onload = () => {
+          if (cancelled || typeof reader.result !== 'string') return;
+          setPreview(reader.result);
+          onImageSelect(reader.result.split(',')[1] || '');
+        };
+        reader.readAsDataURL(blob);
+      })
+      .catch(() => undefined);
+    return () => {
+      cancelled = true;
+    };
+  }, [onImageSelect, sampleUrl]);
 
   const processFile = useCallback(
     (file: File) => {
@@ -57,6 +79,7 @@ export function ImageUpload({ onImageSelect, disabled, className }: ImageUploadP
 
   const clearImage = () => {
     setPreview(null);
+    onImageSelect('');
     if (fileInputRef.current) fileInputRef.current.value = '';
   };
 
@@ -68,6 +91,7 @@ export function ImageUpload({ onImageSelect, disabled, className }: ImageUploadP
           {!disabled && (
             <button
               onClick={clearImage}
+              aria-label="Hapus foto"
               className="absolute top-3 right-3 p-1.5 rounded-full bg-black/50 text-white hover:bg-black/70 transition-base"
             >
               <X className="h-4 w-4" />
@@ -80,6 +104,15 @@ export function ImageUpload({ onImageSelect, disabled, className }: ImageUploadP
           onDragOver={handleDragOver}
           onDragLeave={handleDragLeave}
           onClick={() => !disabled && fileInputRef.current?.click()}
+          onKeyDown={(event) => {
+            if ((event.key === 'Enter' || event.key === ' ') && !disabled) {
+              event.preventDefault();
+              fileInputRef.current?.click();
+            }
+          }}
+          aria-label="Pilih foto sampah"
+          role="button"
+          tabIndex={disabled ? -1 : 0}
           className={cn(
             'flex flex-col items-center justify-center gap-4 rounded-xl border-2 border-dashed p-8 cursor-pointer transition-base',
             isDragging
@@ -97,10 +130,10 @@ export function ImageUpload({ onImageSelect, disabled, className }: ImageUploadP
           </div>
           <div className="text-center">
             <p className="text-sm font-medium text-foreground">
-              {isDragging ? 'Lepaskan file di sini' : 'Klik atau drag foto sampah'}
+              {isDragging ? 'Lepaskan foto di sini' : 'Pilih atau tarik foto sampah'}
             </p>
             <p className="mt-1 text-xs text-muted-foreground">
-              JPG, PNG — Maks 10MB
+              Foto JPG, PNG, atau WebP – maksimal 10MB
             </p>
           </div>
         </div>

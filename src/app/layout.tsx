@@ -10,9 +10,13 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "CompozeIT — AI-Powered Food Waste Redistribution",
+  title: "CompozeIT | CEO Masa Depan",
   description:
-    "Platform cerdas untuk mengalihkan sampah makanan dari TPA melalui AI classification, circular processing, dan marketplace hasil olahan.",
+    "Platform sederhana untuk membantu bisnis mengelola sampah makanan dengan AI.",
+  icons: {
+    icon: "/logo.png",
+    apple: "/logo.png",
+  },
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
@@ -25,7 +29,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
           <footer className="border-t border-border/40 bg-muted/30 py-6">
             <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 text-center">
               <p className="text-xs text-muted-foreground">
-                © 2026 CompozeIT — AI-Powered Food Waste Redistribution &amp; Circular Processing
+                © 2026 CompozeIT | CEO Masa Depan | Kelola sampah, dapatkan nilai
               </p>
             </div>
           </footer>

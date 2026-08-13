@@ -40,6 +40,16 @@ export default function B2BUploadPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [result, setResult] = useState<ClassifyResult | null>(null);
+  const [sampleUrl, setSampleUrl] = useState<string | null>(null);
+
+  const sampleImages = [
+    '/samples/food-waste/sampah1.jpeg',
+    '/samples/food-waste/sampah2.jpg',
+    '/samples/food-waste/sampah3.jpg',
+    '/samples/food-waste/sampah4.jpeg',
+    '/samples/food-waste/sampah5.jpg',
+    '/samples/food-waste/sampah6.jpeg',
+  ];
 
   const handleClassify = async () => {
     if (!imageBase64) return;
@@ -85,15 +95,41 @@ export default function B2BUploadPage() {
   return (
     <div className="mx-auto max-w-2xl px-4 py-8 sm:px-6 lg:px-8">
       <div className="mb-8">
-        <h1 className="text-2xl font-bold tracking-tight">Upload Waste</h1>
+        <h1 className="text-2xl font-bold tracking-tight">Scan Sampah Makanan</h1>
         <p className="mt-1 text-sm text-muted-foreground">
-          Foto sampah makanan bisnis Anda untuk klasifikasi AI dan penjadwalan pickup otomatis.
+          Tidak perlu mengetik. Pilih foto, lalu tekan tombol scan untuk melihat jenis, berat, dan kontaminasi.
         </p>
       </div>
 
       {/* Upload Section */}
       <div className="space-y-4">
-        <ImageUpload onImageSelect={setImageBase64} disabled={loading} />
+        <ImageUpload
+          onImageSelect={setImageBase64}
+          disabled={loading}
+          sampleUrl={sampleUrl}
+        />
+
+        <div className="space-y-2">
+          <p className="text-xs font-medium text-muted-foreground">Coba foto contoh</p>
+          <div className="grid grid-cols-3 gap-2 sm:grid-cols-6">
+            {sampleImages.map((url, index) => (
+              <button
+                key={url}
+                type="button"
+                disabled={loading}
+                aria-label={`Pilih foto sample ${index + 1}`}
+                aria-pressed={sampleUrl === url}
+                onClick={() => {
+                  setResult(null);
+                  setSampleUrl(url);
+                }}
+                className={`overflow-hidden rounded-lg border-2 transition focus:outline-none focus:ring-2 focus:ring-primary ${sampleUrl === url ? 'border-primary ring-2 ring-primary/20' : 'border-border hover:border-primary'}`}
+              >
+                <img src={url} alt={`Sample sampah ${index + 1}`} className="h-16 w-full object-cover" />
+              </button>
+            ))}
+          </div>
+        </div>
 
         {imageBase64 && !loading && !result && (
           <Button
@@ -101,7 +137,7 @@ export default function B2BUploadPage() {
             className="w-full h-11 rounded-xl text-sm font-semibold shadow-lg shadow-primary/20"
           >
             <Upload className="mr-2 h-4 w-4" />
-            Klasifikasi dengan AI
+            Scan Sekarang
           </Button>
         )}
       </div>

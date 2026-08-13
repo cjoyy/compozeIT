@@ -1,12 +1,15 @@
-// CompozeIT — AI Provider Abstraction Layer
+// CompozeIT – AI Provider Abstraction Layer
 // All AI calls MUST go through this module. Do NOT hardcode provider calls in route handlers.
 
 import {
   AIProvider,
   ClassificationResult,
   CLASSIFICATION_PROMPT,
-  DIY_GUIDE_PROMPT,
 } from './types';
+
+interface OpenAIChatResponse {
+  choices?: Array<{ message?: { content?: string | null } }>;
+}
 
 // ============================================================
 // Ollama Provider
@@ -83,7 +86,7 @@ class GeminiProvider implements AIProvider {
     this.apiKey = process.env.GEMINI_API_KEY || '';
     this.model = process.env.GEMINI_MODEL || 'gemini-2.5-flash';
     if (!this.apiKey) {
-      console.warn('[GeminiProvider] GEMINI_API_KEY not set — provider will fail on use');
+      console.warn('[GeminiProvider] GEMINI_API_KEY not set – provider will fail on use');
     }
   }
 
@@ -118,7 +121,7 @@ class GeminiProvider implements AIProvider {
 
     if (!response.ok) {
       const errorBody = await response.text();
-      throw new Error(`Gemini API error: ${response.status} — ${errorBody}`);
+      throw new Error(`Gemini API error: ${response.status} – ${errorBody}`);
     }
 
     const data = await response.json();
@@ -148,7 +151,7 @@ class GeminiProvider implements AIProvider {
 
     if (!response.ok) {
       const errorBody = await response.text();
-      throw new Error(`Gemini API error: ${response.status} — ${errorBody}`);
+      throw new Error(`Gemini API error: ${response.status} – ${errorBody}`);
     }
 
     const data = await response.json();
@@ -158,6 +161,84 @@ class GeminiProvider implements AIProvider {
     }
     return text;
   }
+}
+
+// ============================================================
+// OpenAI Vision Provider
+// ============================================================
+
+class OpenAIProvider implements AIProvider {
+  readonly name = 'openai';
+  private apiKey: string;
+  private model: string;
+
+  constructor() {
+    this.apiKey = process.env.OPENAI_API_KEY || '';
+    this.model = process.env.OPENAI_MODEL || 'gpt-4.1-mini';
+  }
+
+  async classifyWaste(imageBase64: string): Promise<ClassificationResult> {
+    if (!this.apiKey) throw new Error('OPENAI_API_KEY is not configured');
+    const response = await fetch('https://api.openai.com/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${this.apiKey}`,
+      },
+      body: JSON.stringify({
+        model: this.model,
+        temperature: 0.1,
+        response_format: { type: 'json_object' },
+        messages: [
+          { role: 'system', content: CLASSIFICATION_PROMPT },
+          {
+            role: 'user',
+            content: [{ type: 'image_url', image_url: { url: toImageDataUrl(imageBase64) } }],
+          },
+        ],
+      }),
+      signal: AbortSignal.timeout(30000),
+    });
+
+    if (!response.ok) {
+      throw new Error(`OpenAI API error: ${response.status} ${response.statusText}`);
+    }
+
+    const data = (await response.json()) as OpenAIChatResponse;
+    const text = data.choices?.[0]?.message?.content;
+    if (!text) throw new Error('OpenAI returned empty response');
+    return parseClassificationResponse(text);
+  }
+
+  async generateText(prompt: string): Promise<string> {
+    if (!this.apiKey) throw new Error('OPENAI_API_KEY is not configured');
+    const response = await fetch('https://api.openai.com/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${this.apiKey}`,
+      },
+      body: JSON.stringify({ model: this.model, temperature: 0.7, messages: [{ role: 'user', content: prompt }] }),
+      signal: AbortSignal.timeout(30000),
+    });
+
+    if (!response.ok) {
+      throw new Error(`OpenAI API error: ${response.status} ${response.statusText}`);
+    }
+
+    const data = (await response.json()) as OpenAIChatResponse;
+    const text = data.choices?.[0]?.message?.content;
+    if (!text) throw new Error('OpenAI returned empty response');
+    return text;
+  }
+}
+
+function toImageDataUrl(imageBase64: string): string {
+  if (/^data:image\/(jpeg|jpg|png|webp);base64,/i.test(imageBase64)) return imageBase64;
+  if (imageBase64.startsWith('data:')) {
+    throw new Error('Unsupported image MIME type; use JPEG, PNG, or WebP');
+  }
+  return `data:image/jpeg;base64,${imageBase64}`;
 }
 
 // ============================================================
@@ -219,6 +300,9 @@ function parseClassificationResponse(raw: string): ClassificationResult {
  */
 export function getAIProvider(): AIProvider {
   const providerName = process.env.AI_PROVIDER || 'ollama';
+  if (providerName === 'openai') {
+    return new OpenAIProvider();
+  }
   if (providerName === 'gemini') {
     return new GeminiProvider();
   }
@@ -230,6 +314,11 @@ export function getAIProvider(): AIProvider {
  */
 function getFallbackProvider(): AIProvider | null {
   const providerName = process.env.AI_PROVIDER || 'ollama';
+  if (providerName === 'openai') {
+    if (process.env.GEMINI_API_KEY) return new GeminiProvider();
+    if (process.env.OLLAMA_TUNNEL_URL) return new OllamaProvider();
+    return null;
+  }
   if (providerName === 'gemini') {
     // If primary is Gemini, fallback to Ollama (only if tunnel URL is set)
     if (process.env.OLLAMA_TUNNEL_URL) {
@@ -317,4 +406,3 @@ export async function generateTextWithFallback(
 
 // Re-export types
 export type { ClassificationResult, AIProvider } from './types';
-export { DIY_GUIDE_PROMPT } from './types';
