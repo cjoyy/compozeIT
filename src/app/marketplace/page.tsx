@@ -75,16 +75,16 @@ export default function MarketplacePage() {
         <div>
           <div className="mb-3 inline-flex items-center gap-2 rounded-full border border-chart-4/20 bg-chart-4/5 px-3 py-1 text-xs font-medium text-chart-4">
             <ClipboardList className="h-3.5 w-3.5" />
-            Read-only marketplace mockup
+            Tampilan contoh marketplace
           </div>
-          <h1 className="text-2xl font-bold tracking-tight">Marketplace Catalog</h1>
+          <h1 className="text-2xl font-bold tracking-tight">Katalog Hasil Olahan</h1>
           <p className="mt-1 max-w-2xl text-sm text-muted-foreground">
-            Katalog hasil olahan dari seed processor. Transaksi dibuat read-only untuk demo B2B-only.
+            Contoh kompos dan produk BSF dari mitra pengolahan. Katalog ini untuk melihat alur nilai hasil olahan.
           </p>
         </div>
         <div className="inline-flex items-center gap-2 rounded-lg border border-primary/20 bg-primary/5 px-4 py-3 text-sm font-medium text-primary">
           <ShieldCheck className="h-4 w-4" />
-          Seed data catalog
+          Data contoh untuk demo
         </div>
       </div>
 
@@ -106,7 +106,7 @@ export default function MarketplacePage() {
                   : 'text-muted-foreground hover:text-foreground'
               )}
             >
-              {f === 'all' ? 'Semua' : f === 'compost' ? 'Kompos' : 'BSF Feed'}
+              {f === 'all' ? 'Semua' : f === 'compost' ? 'Kompos' : 'Pakan BSF'}
             </button>
           ))}
         </div>

@@ -9,6 +9,10 @@ import { createClient, SupabaseClient } from '@supabase/supabase-js';
 
 let serverClient: SupabaseClient | null = null;
 
+function getProjectUrl(url: string): string {
+  return url.replace(/\/rest\/v1\/?$/, '');
+}
+
 export function getSupabaseServerClient(): SupabaseClient {
   if (serverClient) return serverClient;
 
@@ -21,7 +25,7 @@ export function getSupabaseServerClient(): SupabaseClient {
     );
   }
 
-  serverClient = createClient(url, serviceKey, {
+  serverClient = createClient(getProjectUrl(url), serviceKey, {
     auth: {
       autoRefreshToken: false,
       persistSession: false,
@@ -49,6 +53,6 @@ export function getSupabaseBrowserClient(): SupabaseClient {
     );
   }
 
-  browserClient = createClient(url, anonKey);
+  browserClient = createClient(getProjectUrl(url), anonKey);
   return browserClient;
 }

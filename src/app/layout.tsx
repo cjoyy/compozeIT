@@ -10,7 +10,7 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "CompozeIT | CEO Masa Depan",
+  title: "CompozeIT | Kelola Sampah Makanan Lebih Mudah",
   description:
     "Platform sederhana untuk membantu bisnis mengelola sampah makanan dengan AI.",
   icons: {
@@ -29,7 +29,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
           <footer className="border-t border-border/40 bg-muted/30 py-6">
             <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 text-center">
               <p className="text-xs text-muted-foreground">
-                © 2026 CompozeIT | CEO Masa Depan | Kelola sampah, dapatkan nilai
+                © 2026 CompozeIT | Kelola sampah, dapatkan nilai
               </p>
             </div>
           </footer>

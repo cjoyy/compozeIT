@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useRole } from '@/components/role-provider';
-import { Menu, X } from 'lucide-react';
+import { Menu, UserRound, X } from 'lucide-react';
 import Image from 'next/image';
 import { useState } from 'react';
 import { cn } from '@/lib/utils';
@@ -15,6 +15,7 @@ const B2B_LINKS = [
   { href: '/marketplace', label: 'Hasil Olahan' },
   { href: '/compliance', label: 'Laporan' },
   { href: '/impact', label: 'Dampak' },
+  { href: '/profile', label: 'Profil Bisnis' },
 ];
 
 export function Navbar() {
@@ -53,7 +54,10 @@ export function Navbar() {
 
           {/* Demo business user */}
           <div className="hidden md:flex items-center gap-3">
-            <span className="text-xs text-muted-foreground truncate max-w-[120px]">{userName}</span>
+            <Link href="/profile" className="inline-flex items-center gap-2 rounded-lg px-2 py-1.5 text-xs text-muted-foreground hover:bg-muted hover:text-foreground">
+              <UserRound className="h-4 w-4" />
+              <span className="max-w-[120px] truncate">{userName}</span>
+            </Link>
           </div>
 
           {/* Mobile menu button */}

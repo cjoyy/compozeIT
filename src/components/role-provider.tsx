@@ -5,12 +5,14 @@ import { createContext, useContext, ReactNode } from 'react';
 interface RoleContextType {
   userId: string;
   userName: string;
+  businessName: string;
 }
 
 // Demo B2B user ID – matches seed.sql.
 const DEMO_USER = {
   id: 'd0d0d0d0-0000-4000-8000-000000000001',
   name: 'Restoran Hijau Nusantara',
+  businessName: 'PT Hijau Nusantara',
 };
 
 const RoleContext = createContext<RoleContextType | undefined>(undefined);
@@ -21,6 +23,7 @@ export function RoleProvider({ children }: { children: ReactNode }) {
       value={{
         userId: DEMO_USER.id,
         userName: DEMO_USER.name,
+        businessName: DEMO_USER.businessName,
       }}
     >
       {children}

@@ -15,17 +15,17 @@ export default function Home() {
   return (
     <div className="flex flex-col">
       {/* Hero Section */}
-      <section className="relative overflow-hidden bg-gradient-to-br from-primary/5 via-background to-accent/30 py-16 sm:py-24">
+      <section className="organic-hero relative overflow-hidden py-16 sm:py-24">
         <div className="absolute inset-0 -z-10">
-          <div className="absolute top-10 left-10 h-72 w-72 rounded-full bg-primary/5 blur-3xl" />
-          <div className="absolute bottom-10 right-10 h-96 w-96 rounded-full bg-chart-2/5 blur-3xl" />
+          <div className="leaf-orb leaf-orb-left" />
+          <div className="leaf-orb leaf-orb-right" />
         </div>
 
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="text-center">
             <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-primary/20 bg-primary/5 px-4 py-1.5 text-xs font-medium text-primary">
               <Recycle className="h-3.5 w-3.5" />
-              Dari CEO Masa Depan untuk bisnis yang lebih bersih
+              Pengelolaan sampah makanan yang lebih mudah
             </div>
 
             <h1 className="text-4xl font-bold tracking-tight sm:text-5xl lg:text-6xl">
