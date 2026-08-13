@@ -28,12 +28,12 @@ export function Navbar() {
   const isActive = (href: string) => pathname === href || pathname.startsWith(`${href}/`);
 
   return (
-    <nav className="sticky top-0 z-50 border-b border-border/60 bg-background/80 backdrop-blur-xl">
+    <nav className="sticky top-0 z-50 border-b border-border/60 bg-background/80 backdrop-blur-xl print:hidden">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div className="flex h-16 items-center justify-between">
           {/* Logo */}
           <Link href="/" className="flex items-center gap-2 group" aria-label="CompozeIT beranda">
-            <Image src="/logo.png" alt="CompozeIT" width={132} height={44} priority className="h-9 w-auto object-contain" />
+            <Image src="/logo.png" alt="CompozeIT" width={158} height={52} priority className="h-11 w-auto object-contain" />
           </Link>
 
           {/* Desktop Nav Links */}
@@ -66,7 +66,7 @@ export function Navbar() {
           <div className="hidden md:flex items-center gap-3">
             <Link href="/profile" className="inline-flex items-center gap-2 rounded-lg px-2 py-1.5 text-xs text-muted-foreground hover:bg-muted hover:text-foreground">
               <UserRound className="h-4 w-4" />
-              <span className="max-w-[120px] truncate">{userName}</span>
+              <span className="whitespace-nowrap">Profile</span>
             </Link>
           </div>
 

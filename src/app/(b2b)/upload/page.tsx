@@ -23,6 +23,7 @@ interface ClassifyResult {
   estimated_weight_kg: number;
   is_contaminated: boolean;
   contaminant_type: string | null;
+  is_food_waste: boolean;
   confidence: number;
   track: string;
   status: string;
@@ -34,6 +35,13 @@ interface ClassifyResult {
   _meta?: { ai_provider: string };
 }
 
+const CONTAMINANT_LABELS: Record<string, string> = {
+  plastik: 'Plastik',
+  logam: 'Logam',
+  kaca: 'Kaca',
+  lainnya: 'Material lain (misalnya kardus)',
+};
+
 export default function B2BUploadPage() {
   const { userId } = useRole();
   const [imageBase64, setImageBase64] = useState<string | null>(null);
@@ -44,10 +52,10 @@ export default function B2BUploadPage() {
 
   const sampleImages = [
     '/samples/food-waste/sampah1.jpeg',
-    '/samples/food-waste/sampah2.jpg',
+    '/samples/food-waste/sampah2.png',
     '/samples/food-waste/sampah3.jpg',
-    '/samples/food-waste/sampah4.jpeg',
-    '/samples/food-waste/sampah5.jpg',
+    '/samples/food-waste/sampah4.png',
+    '/samples/food-waste/sampah5.jpeg',
     '/samples/food-waste/sampah6.jpeg',
   ];
 
@@ -110,7 +118,7 @@ export default function B2BUploadPage() {
         />
 
         <div className="space-y-2">
-          <p className="text-xs font-medium text-muted-foreground">Coba foto contoh</p>
+          <p className="text-xs font-medium text-muted-foreground">Pilih foto dari galeri</p>
           <div className="grid grid-cols-3 gap-2 sm:grid-cols-6">
             {sampleImages.map((url, index) => (
               <button
@@ -183,6 +191,16 @@ export default function B2BUploadPage() {
               </div>
             </div>
 
+            {!result.is_food_waste && (
+              <div className="mt-4 flex items-start gap-3 rounded-xl border border-chart-4/30 bg-chart-4/10 p-4">
+                <AlertTriangle className="mt-0.5 h-5 w-5 shrink-0 text-chart-4" />
+                <div>
+                  <p className="text-sm font-medium text-chart-4">Foto ini belum terlihat sebagai sampah makanan</p>
+                  <p className="mt-0.5 text-xs text-muted-foreground">Coba foto sisa makanan di wadah atau area pemilahan agar hasilnya lebih akurat.</p>
+                </div>
+              </div>
+            )}
+
             {/* Contamination */}
             {result.is_contaminated && (
               <div className="mt-4 flex items-start gap-3 rounded-xl bg-destructive/5 border border-destructive/20 p-4">
@@ -190,7 +208,7 @@ export default function B2BUploadPage() {
                 <div>
                   <p className="text-sm font-medium text-destructive">Kontaminasi Terdeteksi</p>
                   <p className="text-xs text-muted-foreground mt-0.5">
-                    Jenis kontaminan: {result.contaminant_type || 'Tidak diketahui'}
+                    Jenis kontaminan: {CONTAMINANT_LABELS[result.contaminant_type || ''] || 'Material lain'}
                   </p>
                 </div>
               </div>
@@ -215,12 +233,12 @@ export default function B2BUploadPage() {
             <div className="rounded-2xl border border-border bg-card p-6 shadow-sm">
               <h3 className="text-sm font-semibold mb-3 flex items-center gap-2">
                 <AlertTriangle className="h-4 w-4 text-chart-4" />
-                Status Akumulasi B2B
+                  Progres pengumpulan sampah
               </h3>
               <div className="space-y-3">
                 <div>
                   <div className="flex justify-between text-xs text-muted-foreground mb-1.5">
-                    <span>Total Pending</span>
+                    <span>Menunggu penjemputan</span>
                     <span>
                       {result.b2b_status.total_pending_kg} / {result.b2b_status.threshold_kg} kg
                     </span>

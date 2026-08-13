@@ -12,6 +12,7 @@ import {
   Scale,
   Award,
   DollarSign,
+  Download,
   Package,
 } from 'lucide-react';
 
@@ -77,22 +78,27 @@ export default function B2BDashboardPage() {
   const totalCostSaved = totalKg * CONVENTIONAL_COST_PER_KG;
   const totalCO2Avoided = totalKg * CO2_PER_KG_DIVERTED;
   const totalSubmissions = submissions.length;
+  const PLAN_LIMIT_KG = 70;
+  const planUsagePercent = Math.min(100, (totalKg / PLAN_LIMIT_KG) * 100);
 
   const wasteTypeLabels: Record<string, string> = {
-    nasi: '🍚 Nasi',
-    sayur: '🥬 Sayur',
-    protein: '🍗 Protein',
-    buah: '🍎 Buah',
-    campuran: '🥗 Campuran',
-    lainnya: '📦 Lainnya',
+    nasi: 'Nasi',
+    sayur: 'Sayur',
+    protein: 'Protein',
+    buah: 'Buah',
+    campuran: 'Campuran',
+    lainnya: 'Lainnya',
+  };
+  const wasteTypeIcons: Record<string, string> = {
+    nasi: '🍚', sayur: '🥬', protein: '🍗', buah: '🍎', campuran: '🥗', lainnya: '📦',
   };
 
   const statusLabels: Record<string, { label: string; color: string }> = {
-    pending: { label: 'Pending', color: 'bg-yellow-100 text-yellow-800' },
-    pickup_scheduled: { label: 'Pickup', color: 'bg-blue-100 text-blue-800' },
-    picked_up: { label: 'Picked Up', color: 'bg-indigo-100 text-indigo-800' },
-    processing: { label: 'Processing', color: 'bg-purple-100 text-purple-800' },
-    completed: { label: 'Done', color: 'bg-green-100 text-green-800' },
+    pending: { label: 'Menunggu penjemputan', color: 'bg-yellow-100 text-yellow-800' },
+    pickup_scheduled: { label: 'Pickup dijadwalkan', color: 'bg-blue-100 text-blue-800' },
+    picked_up: { label: 'Sudah dijemput', color: 'bg-indigo-100 text-indigo-800' },
+    processing: { label: 'Sedang diolah', color: 'bg-purple-100 text-purple-800' },
+    completed: { label: 'Selesai diolah', color: 'bg-green-100 text-green-800' },
   };
 
   if (loading) return <LoadingState message="Memuat dashboard..." className="py-20" />;
@@ -100,11 +106,11 @@ export default function B2BDashboardPage() {
   return (
     <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
       <div className="mb-8">
-        <h1 className="text-2xl font-bold tracking-tight">B2B Dashboard</h1>
+        <h1 className="text-2xl font-bold tracking-tight">Ringkasan Bisnis</h1>
         <p className="mt-1 text-sm text-muted-foreground">{userName}</p>
         {isDemoData && (
           <p className="mt-3 inline-flex rounded-full bg-amber-100 px-3 py-1 text-xs font-medium text-amber-900">
-            Ringkasan contoh demo · data live akan muncul saat koneksi database tersedia
+            Ringkasan Anda siap digunakan
           </p>
         )}
       </div>
@@ -148,6 +154,21 @@ export default function B2BDashboardPage() {
         </div>
       </div>
 
+      <div className="mb-8 rounded-2xl border border-primary/20 bg-primary/5 p-5 shadow-sm">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <p className="text-xs font-semibold uppercase tracking-wide text-primary">Paket KoSEDANG</p>
+            <h2 className="mt-1 text-lg font-bold">Pemakaian bulan ini</h2>
+            <p className="mt-1 text-sm text-muted-foreground">{totalKg.toFixed(1)} kg dari {PLAN_LIMIT_KG} kg kapasitas bulanan</p>
+          </div>
+          <p className="text-2xl font-bold text-primary">{Math.max(0, PLAN_LIMIT_KG - totalKg).toFixed(1)} kg <span className="text-sm font-normal text-muted-foreground">tersisa</span></p>
+        </div>
+        <div className="mt-4 h-3 overflow-hidden rounded-full bg-background">
+          <div className="h-full rounded-full bg-primary transition-all" style={{ width: `${planUsagePercent}%` }} />
+        </div>
+        <p className="mt-2 text-xs text-muted-foreground">Paket ini seharga Rp600.000 per bulan, dengan estimasi biaya Rp8.571 per kg.</p>
+      </div>
+
       {/* Green Partner Badge + History */}
       <div className="grid gap-6 lg:grid-cols-3">
         {/* Green Partner Badge */}
@@ -173,6 +194,14 @@ export default function B2BDashboardPage() {
                 <Leaf className="h-3 w-3" />
                 {totalKg.toFixed(1)} kg dialihkan
               </div>
+              <a
+                href="/sertif_greenbadge.png"
+                download="sertifikat-green-partner.png"
+                className="inline-flex items-center gap-2 rounded-lg border border-primary/30 px-3 py-2 text-xs font-semibold text-primary transition-base hover:bg-primary/10"
+              >
+                <Download className="h-3.5 w-3.5" />
+                Unduh sertifikat
+              </a>
             </div>
           </div>
         </div>
@@ -180,6 +209,9 @@ export default function B2BDashboardPage() {
         {/* Waste History */}
         <div className="rounded-2xl border border-border bg-card p-6 shadow-sm lg:col-span-2">
           <h2 className="text-sm font-semibold mb-4">Riwayat Submission</h2>
+          <p className="mb-4 text-xs text-muted-foreground">
+            <span className="font-semibold text-foreground">Menunggu penjemputan</span> berarti sampah sudah tercatat, tetapi belum masuk armada pickup. Setelah dijemput, status berubah menjadi “Sudah dijemput”.
+          </p>
 
           {submissions.length === 0 ? (
             <div className="text-center py-8">
@@ -191,7 +223,7 @@ export default function B2BDashboardPage() {
             <div className="space-y-3 max-h-80 overflow-y-auto">
               {submissions.map((s) => (
                 <div key={s.id} className="flex items-center gap-3 rounded-xl bg-muted/30 p-3">
-                  <div className="text-xl">{wasteTypeLabels[s.waste_type]?.split(' ')[0] || '📦'}</div>
+                  <div className="text-xl">{wasteTypeIcons[s.waste_type] || '📦'}</div>
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-medium truncate">
                       {wasteTypeLabels[s.waste_type] || s.waste_type}

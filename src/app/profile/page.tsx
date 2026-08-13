@@ -34,6 +34,31 @@ export default function ProfilePage() {
         </div>
       </section>
 
+      <section className="mt-5 space-y-3">
+        <h2 className="px-1 text-sm font-semibold">Paket layanan</h2>
+        <div className="rounded-2xl border border-primary/20 bg-primary/5 p-5">
+          <div className="flex items-start justify-between gap-4">
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-wide text-primary">Paket aktif</p>
+              <h3 className="mt-1 text-xl font-bold">KoSEDANG</h3>
+              <p className="mt-1 text-sm text-muted-foreground">Cocok untuk bisnis yang mengalihkan hingga 70 kg sampah makanan setiap bulan.</p>
+            </div>
+              <p className="text-right text-sm font-semibold">Rp 600.000<span className="block text-xs font-normal text-muted-foreground">/bulan</span></p>
+          </div>
+          <div className="mt-4 grid grid-cols-3 gap-2 text-center text-xs">
+            <div className="rounded-xl bg-background p-3"><p className="font-bold">70 kg</p><p className="mt-1 text-muted-foreground">batas/bulan</p></div>
+            <div className="rounded-xl bg-background p-3"><p className="font-bold">Rp8.571</p><p className="mt-1 text-muted-foreground">per kg</p></div>
+            <div className="rounded-xl bg-background p-3"><p className="font-bold">Aktif</p><p className="mt-1 text-muted-foreground">status</p></div>
+          </div>
+        </div>
+        <div className="grid gap-2 text-xs text-muted-foreground sm:grid-cols-3">
+          <p><span className="font-semibold text-foreground">KoMINI</span> · Rp300.000 · 30 kg/bulan</p>
+          <p><span className="font-semibold text-foreground">KoSEDANG</span> · Rp600.000 · 70 kg/bulan</p>
+          <p><span className="font-semibold text-foreground">KoBESAR</span> · Rp1.100.000 · 170 kg/bulan</p>
+        </div>
+        <p className="text-xs text-muted-foreground">Pemakaian bulan berjalan dapat dilihat di Ringkasan Bisnis. Saldo cashback dapat dipakai untuk renewal layanan, dengan biaya renewal Rp300.000 per bulan.</p>
+      </section>
+
       <section className="mt-5 rounded-2xl border border-primary/20 bg-primary/5 p-5">
         <div className="flex gap-3">
           <ScanLine className="mt-0.5 h-5 w-5 shrink-0 text-primary" />
@@ -48,7 +73,7 @@ export default function ProfilePage() {
       </section>
 
       <p className="mt-5 flex items-center gap-2 px-1 text-xs text-muted-foreground">
-        <UserRound className="h-4 w-4" /> Profil ini memakai data demo bisnis untuk presentasi.
+        <UserRound className="h-4 w-4" /> Kelola informasi bisnis dan mulai pencatatan sampah dari sini.
       </p>
     </div>
   );

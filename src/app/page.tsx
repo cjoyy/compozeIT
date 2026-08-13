@@ -74,14 +74,14 @@ export default function Home() {
               },
               {
                 icon: Recycle,
-                title: 'Matching Processor',
+                title: 'Mitra Pengolahan Terdekat',
                 desc: 'Sistem mencocokkan ke fasilitas pemrosesan terdekat',
                 color: 'bg-chart-2/10 text-chart-2',
               },
               {
                 icon: Factory,
                 title: 'Proses Circular',
-                desc: 'Sampah diolah menjadi kompos atau pakan BSF',
+                desc: 'Sampah diolah menjadi kompos atau pakan maggot',
                 color: 'bg-chart-3/10 text-chart-3',
               },
               {
@@ -119,7 +119,7 @@ export default function Home() {
               </div>
               <div>
                 <h3 className="text-sm font-semibold">Marketplace</h3>
-                <p className="text-xs text-muted-foreground">Beli kompos & pakan BSF berkualitas</p>
+                <p className="text-xs text-muted-foreground">Beli kompos dan pakan maggot berkualitas</p>
               </div>
               <ArrowRight className="ml-auto h-4 w-4 text-muted-foreground group-hover:text-foreground transition-base" />
             </Link>

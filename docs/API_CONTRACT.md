@@ -51,6 +51,7 @@ interface ClassifyResponse {
   user_cashback_balance: number;          // user's balance after this submission
   is_contaminated: boolean;
   contaminant_type: ContaminantType;
+  is_food_waste: boolean;               // false when the photo is not food waste
   confidence: number;                   // 0-1
   track: TrackType;
   status: 'pending';
@@ -95,6 +96,7 @@ interface ClassifyResponse {
   "user_cashback_balance": 12500,
   "is_contaminated": false,
   "contaminant_type": null,
+  "is_food_waste": true,
   "confidence": 0.87,
   "track": "b2b",
   "status": "pending",
@@ -533,7 +535,7 @@ GET /api/marketplace?product_type=compost&min_stock_kg=100&sort_by=price_per_kg&
       "processor_id": "a1b2c3d4-1111-4000-8000-000000000007",
       "processor_name": "BSF Tangerang Selatan",
       "product_type": "compost",
-      "price_per_kg": 2000,
+      "price_per_kg": 12000,
       "stock_kg": 400.0,
       "npk_content": "7-3-5",
       "description": "Kasgot ekonomis – pupuk organik untuk lahan pertanian.",

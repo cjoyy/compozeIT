@@ -11,6 +11,7 @@ import {
   Scale,
   ShieldCheck,
   TrendingDown,
+  Download,
 } from 'lucide-react';
 import { ErrorState } from '@/components/error-state';
 import { LoadingState } from '@/components/loading-state';
@@ -53,7 +54,7 @@ export default function CompliancePage() {
   const { userId, userName } = useRole();
   const [submissions, setSubmissions] = useState<WasteSubmission[]>([]);
   const [loading, setLoading] = useState(true);
-  const [usingFallback, setUsingFallback] = useState(false);
+  const [, setUsingFallback] = useState(false);
   const [reloadToken, setReloadToken] = useState(0);
 
   useEffect(() => {
@@ -121,34 +122,34 @@ export default function CompliancePage() {
   if (loading) return <LoadingState message="Menyusun laporan compliance..." className="py-20" />;
 
   return (
-    <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
+      <div id="compliance-report" className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
       <div className="mb-8 flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
         <div>
           <div className="mb-3 inline-flex items-center gap-2 rounded-full border border-chart-5/20 bg-chart-5/5 px-3 py-1 text-xs font-medium text-chart-5">
             <ClipboardCheck className="h-3.5 w-3.5" />
-            Marketplace & Compliance Mockup
+            Laporan Dampak Bisnis
           </div>
           <h1 className="text-2xl font-bold tracking-tight">MBG / ESG Compliance Report</h1>
           <p className="mt-1 max-w-2xl text-sm text-muted-foreground">
-            Contoh laporan web dari data klasifikasi dan submission B2B. PDF generation belum termasuk scope demo.
+            Pantau volume sampah yang dialihkan, jenis material, dan kontribusi lingkungan bisnis Anda.
           </p>
         </div>
-        <button
-          onClick={() => setReloadToken((token) => token + 1)}
-          className="inline-flex h-9 items-center justify-center rounded-lg border border-border px-3 text-sm font-medium hover:bg-muted"
-        >
-          Refresh Report
-        </button>
+        <div className="flex flex-wrap gap-2 print:hidden">
+          <button
+            onClick={() => setReloadToken((token) => token + 1)}
+            className="inline-flex h-9 items-center justify-center rounded-lg border border-border px-3 text-sm font-medium hover:bg-muted"
+          >
+            Perbarui laporan
+          </button>
+          <button
+            onClick={() => window.print()}
+            className="inline-flex h-9 items-center justify-center gap-2 rounded-lg bg-primary px-3 text-sm font-semibold text-primary-foreground hover:bg-primary/90"
+          >
+            <Download className="h-4 w-4" />
+            Simpan sebagai PDF
+          </button>
+        </div>
       </div>
-
-      {usingFallback && (
-        <div className="mb-6 rounded-lg border border-primary/20 bg-primary/5 p-4">
-          <p className="text-sm font-medium text-foreground">Ringkasan contoh siap dilihat</p>
-          <p className="mt-1 text-xs text-muted-foreground">
-            Angka di halaman ini memakai data contoh agar laporan tetap mudah dipresentasikan.
-          </p>
-        </div>
-      )}
 
       {submissions.length === 0 ? (
         <ErrorState message="Belum ada submission untuk laporan" details="Upload foto sampah dulu agar laporan compliance memakai data real." />
@@ -228,7 +229,7 @@ export default function CompliancePage() {
           </section>
 
           <section className="rounded-lg border border-border bg-card p-6 shadow-sm">
-            <h2 className="text-sm font-semibold">Submission Sample</h2>
+            <h2 className="text-sm font-semibold">Aktivitas pengumpulan terbaru</h2>
             <div className="mt-4 overflow-hidden rounded-lg border border-border">
               <div className="grid grid-cols-[1fr_0.7fr_0.7fr] bg-muted/60 px-4 py-2 text-xs font-semibold text-muted-foreground">
                 <span>Jenis</span>

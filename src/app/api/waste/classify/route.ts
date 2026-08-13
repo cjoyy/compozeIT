@@ -20,6 +20,7 @@ interface WasteSubmissionWithCashback {
   cashback_amount: number | string;
   is_contaminated: boolean;
   contaminant_type: string | null;
+  is_food_waste: boolean;
   confidence: number | string;
   track: string;
   status: string;
@@ -135,6 +136,7 @@ export async function POST(request: NextRequest) {
       estimated_weight_kg: data.estimated_weight_kg,
       is_contaminated: data.is_contaminated,
       contaminant_type: data.contaminant_type,
+      is_food_waste: classificationResult.is_food_waste,
       confidence: data.confidence,
       track: data.track,
       status: data.status,

@@ -482,41 +482,45 @@ ON CONFLICT (id) DO NOTHING;
 
 INSERT INTO marketplace_listings (id, processor_id, product_type, price_per_kg, stock_kg, npk_content, description) VALUES
   -- Dari EcoCompost Jakarta Selatan
-  ('b2c3d4e5-2222-4000-8000-000000000001', 'a1b2c3d4-1111-4000-8000-000000000001', 'compost', 3500, 200.00, '12-5-8', 'Kompos premium dari sisa makanan restoran Jakarta Selatan. Sudah difermentasi 30 hari.'),
-  ('b2c3d4e5-2222-4000-8000-000000000002', 'a1b2c3d4-1111-4000-8000-000000000001', 'compost', 2500, 150.00, '8-3-6', 'Kompos standar untuk tanaman hias dan kebun rumah.'),
+  ('b2c3d4e5-2222-4000-8000-000000000001', 'a1b2c3d4-1111-4000-8000-000000000001', 'compost', 12000, 200.00, '12-5-8', 'Kompos premium dari sisa makanan restoran Jakarta Selatan. Sudah difermentasi 30 hari.'),
+  ('b2c3d4e5-2222-4000-8000-000000000002', 'a1b2c3d4-1111-4000-8000-000000000001', 'compost', 10000, 150.00, '8-3-6', 'Kompos standar untuk tanaman hias dan kebun rumah.'),
   
   -- Dari BSF Farm Cakung
-  ('b2c3d4e5-2222-4000-8000-000000000003', 'a1b2c3d4-1111-4000-8000-000000000002', 'bsf', 25000, 50.00, NULL, 'Larva BSF kering – pakan ikan lele & unggas. Protein 42%.'),
+  ('b2c3d4e5-2222-4000-8000-000000000003', 'a1b2c3d4-1111-4000-8000-000000000002', 'bsf', 18000, 50.00, NULL, 'Larva BSF kering – pakan ikan lele & unggas. Protein 42%.'),
   ('b2c3d4e5-2222-4000-8000-000000000004', 'a1b2c3d4-1111-4000-8000-000000000002', 'bsf', 15000, 80.00, NULL, 'Kasgot (kascing maggot) – pupuk organik dari residu BSF.'),
   
   -- Dari GreenCycle Kebayoran
-  ('b2c3d4e5-2222-4000-8000-000000000005', 'a1b2c3d4-1111-4000-8000-000000000003', 'compost', 4000, 100.00, '14-6-10', 'Kompos super – diperkaya dengan mikroorganisme tanah aktif.'),
+  ('b2c3d4e5-2222-4000-8000-000000000005', 'a1b2c3d4-1111-4000-8000-000000000003', 'compost', 15000, 100.00, '14-6-10', 'Kompos super – diperkaya dengan mikroorganisme tanah aktif.'),
   
   -- Dari Maggot Farm Cibinong
-  ('b2c3d4e5-2222-4000-8000-000000000006', 'a1b2c3d4-1111-4000-8000-000000000004', 'bsf', 22000, 120.00, NULL, 'Tepung larva BSF untuk campuran pelet ikan. Kadar protein 40%.'),
-  ('b2c3d4e5-2222-4000-8000-000000000007', 'a1b2c3d4-1111-4000-8000-000000000004', 'bsf', 18000, 90.00, NULL, 'Minyak larva BSF – bahan baku biodiesel dan pakan ternak.'),
-  ('b2c3d4e5-2222-4000-8000-000000000008', 'a1b2c3d4-1111-4000-8000-000000000004', 'compost', 3000, 300.00, '10-4-7', 'Frass BSF – pupuk organik kaya nitrogen dari sisa proses BSF.'),
+  ('b2c3d4e5-2222-4000-8000-000000000006', 'a1b2c3d4-1111-4000-8000-000000000004', 'bsf', 17000, 120.00, NULL, 'Tepung larva BSF untuk campuran pelet ikan. Kadar protein 40%.'),
+  ('b2c3d4e5-2222-4000-8000-000000000007', 'a1b2c3d4-1111-4000-8000-000000000004', 'bsf', 16000, 90.00, NULL, 'Minyak larva BSF – bahan baku biodiesel dan pakan ternak.'),
+  ('b2c3d4e5-2222-4000-8000-000000000008', 'a1b2c3d4-1111-4000-8000-000000000004', 'compost', 13000, 300.00, '10-4-7', 'Frass BSF – pupuk organik kaya nitrogen dari sisa proses BSF.'),
   
   -- Dari BogorCompost Sentul
-  ('b2c3d4e5-2222-4000-8000-000000000009', 'a1b2c3d4-1111-4000-8000-000000000005', 'compost', 2800, 250.00, '9-4-6', 'Kompos sayur-buah murni. Cocok untuk urban farming.'),
+  ('b2c3d4e5-2222-4000-8000-000000000009', 'a1b2c3d4-1111-4000-8000-000000000005', 'compost', 11000, 250.00, '9-4-6', 'Kompos sayur-buah murni. Cocok untuk urban farming.'),
   
   -- Dari Depok Circular Hub
-  ('b2c3d4e5-2222-4000-8000-000000000010', 'a1b2c3d4-1111-4000-8000-000000000006', 'compost', 3200, 180.00, '11-5-8', 'Kompos campuran food waste dapur. Sudah disertifikasi SNI.'),
+  ('b2c3d4e5-2222-4000-8000-000000000010', 'a1b2c3d4-1111-4000-8000-000000000006', 'compost', 14000, 180.00, '11-5-8', 'Kompos campuran food waste dapur. Sudah disertifikasi SNI.'),
   
   -- Dari BSF Tangerang Selatan
-  ('b2c3d4e5-2222-4000-8000-000000000011', 'a1b2c3d4-1111-4000-8000-000000000007', 'bsf', 28000, 35.00, NULL, 'Larva BSF segar – langsung dari farm, untuk pakan lele premium.'),
-  ('b2c3d4e5-2222-4000-8000-000000000012', 'a1b2c3d4-1111-4000-8000-000000000007', 'compost', 2000, 400.00, '7-3-5', 'Kasgot ekonomis – pupuk organik untuk lahan pertanian.'),
+  ('b2c3d4e5-2222-4000-8000-000000000011', 'a1b2c3d4-1111-4000-8000-000000000007', 'bsf', 19000, 35.00, NULL, 'Larva BSF segar – langsung dari farm, untuk pakan lele premium.'),
+  ('b2c3d4e5-2222-4000-8000-000000000012', 'a1b2c3d4-1111-4000-8000-000000000007', 'compost', 10000, 400.00, '7-3-5', 'Kasgot ekonomis – pupuk organik untuk lahan pertanian.'),
   
   -- Dari TangerangCompost Bintaro
-  ('b2c3d4e5-2222-4000-8000-000000000013', 'a1b2c3d4-1111-4000-8000-000000000008', 'compost', 3800, 90.00, '13-5-9', 'Kompos premium Bintaro – dari sisa restoran dan cafe area BSD.'),
+  ('b2c3d4e5-2222-4000-8000-000000000013', 'a1b2c3d4-1111-4000-8000-000000000008', 'compost', 15500, 90.00, '13-5-9', 'Kompos premium Bintaro – dari sisa restoran dan cafe area BSD.'),
   
   -- Dari Bekasi Maggot Center
   ('b2c3d4e5-2222-4000-8000-000000000014', 'a1b2c3d4-1111-4000-8000-000000000009', 'bsf', 20000, 70.00, NULL, 'Larva BSF kering grade A – standar ekspor pakan ternak.'),
   
   -- Dari EcoFarm Cikarang
-  ('b2c3d4e5-2222-4000-8000-000000000015', 'a1b2c3d4-1111-4000-8000-000000000010', 'compost', 3000, 220.00, '10-4-8', 'Kompos industrial – bulk order untuk perkebunan dan nursery.')
+  ('b2c3d4e5-2222-4000-8000-000000000015', 'a1b2c3d4-1111-4000-8000-000000000010', 'compost', 12500, 220.00, '10-4-8', 'Kompos industrial – bulk order untuk perkebunan dan nursery.')
 
 ON CONFLICT (id) DO NOTHING;
+
+-- Keep the catalog within the customer-facing Rp10.000–Rp20.000/kg range.
+UPDATE marketplace_listings
+SET price_per_kg = GREATEST(10000, LEAST(20000, price_per_kg));
 
 -- ============================================================
 -- SEED DATA: Demo Users (for frontend demo – no auth system)

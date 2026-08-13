@@ -1,6 +1,7 @@
 @import "tailwindcss";
 @import "tw-animate-css";
 @import "shadcn/tailwind.css";
+@import "leaflet/dist/leaflet.css";
 
 @custom-variant dark (&:is(.dark *));
 
@@ -167,4 +168,33 @@
 .route-map-grid {
   background-image: linear-gradient(oklch(0.45 0.1 155 / 0.12) 1px, transparent 1px), linear-gradient(90deg, oklch(0.45 0.1 155 / 0.12) 1px, transparent 1px);
   background-size: 24px 24px;
+}
+
+.leaflet-business-pin,
+.leaflet-processor-pin {
+  display: grid;
+  place-items: center;
+  border: 3px solid white;
+  border-radius: 999px;
+  box-shadow: 0 3px 10px rgb(15 81 50 / 28%);
+  font-size: 15px;
+}
+
+.leaflet-business-pin { background: #2d7a4b; color: white; }
+.leaflet-processor-pin { background: #d8a928; color: #173b28; }
+.leaflet-vehicle-pin,
+.leaflet-delivered-pin {
+  display: grid;
+  place-items: center;
+  border: 3px solid white;
+  border-radius: 999px;
+  box-shadow: 0 3px 10px rgb(15 81 50 / 28%);
+  font-size: 14px;
+}
+.leaflet-vehicle-pin { background: #2563eb; color: white; }
+.leaflet-delivered-pin { background: #64748b; color: white; }
+
+@media print {
+  body { background: white !important; }
+  .print\:hidden { display: none !important; }
 }

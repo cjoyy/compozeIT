@@ -1,0 +1,56 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="1000" viewBox="0 0 1600 1000" role="img" aria-labelledby="title desc">
+  <title id="title">CompozeIT production database schema</title>
+  <desc id="desc">Entity relationship diagram for identity, B2B waste operations, cashback, traceability, and marketplace mockup.</desc>
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#f4fbf4"/>
+      <stop offset="1" stop-color="#e8f4ec"/>
+    </linearGradient>
+    <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="5" stdDeviation="7" flood-color="#17472f" flood-opacity=".12"/>
+    </filter>
+    <marker id="arrow" markerWidth="10" markerHeight="10" refX="8" refY="5" orient="auto">
+      <path d="M0 0 10 5 0 10Z" fill="#6b8f78"/>
+    </marker>
+    <style>
+      .title{font:700 34px Inter,Arial,sans-serif;fill:#123b29}.subtitle{font:400 17px Inter,Arial,sans-serif;fill:#527063}.section{font:700 18px Inter,Arial,sans-serif;letter-spacing:1.5px;fill:#296344}.table-title{font:700 19px Inter,Arial,sans-serif;fill:#123b29}.field{font:400 14px ui-monospace,SFMono-Regular,Consolas,monospace;fill:#426354}.real{fill:#fff;stroke:#70ad82;stroke-width:2}.mock{fill:#fffaf0;stroke:#d4a94e;stroke-width:2}.line{stroke:#86a992;stroke-width:2;fill:none;marker-end:url(#arrow)}.tag{font:700 12px Inter,Arial,sans-serif;letter-spacing:1px}.small{font:400 13px Inter,Arial,sans-serif;fill:#637d6d}
+    </style>
+  </defs>
+  <rect width="1600" height="1000" fill="url(#bg)"/>
+  <text x="70" y="65" class="title">CompozeIT · Database Schema</text>
+  <text x="70" y="96" class="subtitle">PostgreSQL / Supabase · target production architecture · B2B circular waste platform</text>
+  <rect x="1275" y="43" width="125" height="28" rx="14" fill="#dff3e3"/><text x="1337" y="62" text-anchor="middle" class="tag" fill="#287044">REAL</text>
+  <rect x="1415" y="43" width="125" height="28" rx="14" fill="#fff0c9"/><text x="1477" y="62" text-anchor="middle" class="tag" fill="#9a6d16">MOCKUP</text>
+
+  <text x="70" y="155" class="section">IDENTITY &amp; TENANCY</text>
+  <g filter="url(#shadow)">
+    <rect x="70" y="178" width="270" height="125" rx="16" class="real"/><text x="92" y="211" class="table-title">auth.users</text><text x="92" y="239" class="field">id · email · auth metadata</text><text x="92" y="263" class="field">Supabase managed identity</text><text x="92" y="286" class="small">source of login identity</text>
+    <rect x="385" y="178" width="270" height="125" rx="16" class="real"/><text x="407" y="211" class="table-title">profiles</text><text x="407" y="239" class="field">id · display_name · phone</text><text x="407" y="263" class="field">created_at · updated_at</text><text x="407" y="286" class="small">one profile per auth user</text>
+    <rect x="700" y="178" width="300" height="125" rx="16" class="real"/><text x="722" y="211" class="table-title">organizations</text><text x="722" y="239" class="field">legal_name · business_name</text><text x="722" y="263" class="field">subscription · cashback_balance</text><text x="722" y="286" class="small">B2B tenant and balance cache</text>
+    <rect x="1045" y="178" width="300" height="125" rx="16" class="real"/><text x="1067" y="211" class="table-title">organization_members</text><text x="1067" y="239" class="field">organization_id · profile_id</text><text x="1067" y="263" class="field">role: owner/operator/viewer</text><text x="1067" y="286" class="small">tenant access control</text>
+  </g>
+  <path d="M340 240h42" class="line"/><path d="M655 240h42" class="line"/><path d="M1000 240h38" class="line"/>
+
+  <text x="70" y="355" class="section">REAL CIRCULAR OPERATIONS</text>
+  <g filter="url(#shadow)">
+    <rect x="70" y="378" width="330" height="170" rx="16" class="real"/><text x="94" y="413" class="table-title">waste_submissions</text><text x="94" y="444" class="field">waste_type · weight_kg</text><text x="94" y="468" class="field">contamination · confidence</text><text x="94" y="492" class="field">cashback_amount · status</text><text x="94" y="520" class="small">AI classification source of truth</text>
+    <rect x="470" y="378" width="290" height="170" rx="16" class="real"/><text x="494" y="413" class="table-title">batches</text><text x="494" y="444" class="field">processor_id · total_weight_kg</text><text x="494" y="468" class="field">status: submitted → sold</text><text x="494" y="492" class="field">created_at · completed_at</text><text x="494" y="520" class="small">current traceability state</text>
+    <rect x="830" y="378" width="300" height="170" rx="16" class="real"/><text x="854" y="413" class="table-title">batch_status_events</text><text x="854" y="444" class="field">batch_id · status · note</text><text x="854" y="468" class="field">changed_by · created_at</text><text x="854" y="492" class="field">append-only timeline</text><text x="854" y="520" class="small">audit history for judges</text>
+    <rect x="1200" y="378" width="300" height="170" rx="16" class="real"/><text x="1224" y="413" class="table-title">processors</text><text x="1224" y="444" class="field">type: compost / bsf</text><text x="1224" y="468" class="field">lat · lng · capacity_kg</text><text x="1224" y="492" class="field">current_load_kg · is_active</text><text x="1224" y="520" class="small">partner reference data</text>
+  </g>
+  <path d="M850 303v50H235v20" class="line"/><path d="M850 303v50h385v20" class="line"/><path d="M400 463h62" class="line"/><path d="M760 463h62" class="line"/><path d="M1130 463h62" class="line"/>
+
+  <text x="70" y="600" class="section">CASHBACK &amp; COMMERCIAL LOOP</text>
+  <g filter="url(#shadow)">
+    <rect x="70" y="623" width="330" height="160" rx="16" class="real"/><text x="94" y="658" class="table-title">cashback_ledger</text><text x="94" y="689" class="field">credit · renewal_debit</text><text x="94" y="713" class="field">amount · submission_id</text><text x="94" y="737" class="field">organization_id · created_at</text><text x="94" y="765" class="small">auditable balance movements</text>
+    <rect x="470" y="623" width="300" height="160" rx="16" class="real"/><text x="494" y="658" class="table-title">subscriptions</text><text x="494" y="689" class="field">plan_name · monthly_fee</text><text x="494" y="713" class="field">status · period_end</text><text x="494" y="737" class="field">active / renewal_due</text><text x="494" y="765" class="small">Rp300.000 demo renewal fee</text>
+    <rect x="840" y="623" width="300" height="160" rx="16" class="mock"/><text x="864" y="658" class="table-title">marketplace_listings</text><text x="864" y="689" class="field">product_type · price_per_kg</text><text x="864" y="713" class="field">stock_kg · processor_id</text><text x="864" y="737" class="field">is_demo = true</text><text x="864" y="765" class="small">read-only catalog mockup</text>
+    <rect x="1210" y="623" width="290" height="160" rx="16" class="mock"/><text x="1234" y="658" class="table-title">transactions</text><text x="1234" y="689" class="field">listing_id · buyer_name</text><text x="1234" y="713" class="field">quantity_kg · status</text><text x="1234" y="737" class="field">is_demo = true</text><text x="1234" y="765" class="small">future integration shape</text>
+  </g>
+  <path d="M235 548v55" class="line"/><path d="M235 548v25h385v45" class="line"/><path d="M400 703h52" class="line"/><path d="M770 703h62" class="line"/><path d="M1140 703h62" class="line"/>
+
+  <rect x="70" y="850" width="1430" height="78" rx="16" fill="#123b29"/>
+  <text x="100" y="882" class="tag" fill="#b9e769">DATA FLOW</text>
+  <text x="100" y="909" font-family="Inter,Arial,sans-serif" font-size="18" fill="#fff">Foto bisnis → AI classification → submission → cashback credit → batch timeline → processor → subscription renewal</text>
+  <text x="70" y="968" class="small">Legacy MVP enums (B2C) remain only for compatibility and are not used by active B2B routes.</text>
+</svg>

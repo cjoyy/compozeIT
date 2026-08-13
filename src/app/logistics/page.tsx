@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import {
   CheckCircle2,
   Clock3,
@@ -30,7 +30,7 @@ const DEMO_PICKUP = {
   businessName: 'Restoran Hijau Nusantara',
   locationLabel: 'Jl. Kemang Raya, Jakarta Selatan',
   lat: -6.2615,
-  lng: 106.8106,
+  lng: 106.8130,
   wasteType: 'campuran',
   weightKg: 62.5,
 };
@@ -65,11 +65,12 @@ const FALLBACK_MATCHES: ProcessorMatch[] = [
   },
 ];
 
+type PickupStatus = 'in_transit' | 'delivered';
+
 const TIMELINE = [
-  { label: 'Submission diterima', time: '09:10', icon: PackageCheck, done: true },
-  { label: 'Partner logistik dipilih', time: '09:12', icon: Factory, done: true },
-  { label: 'Rute sedang dioptimalkan', time: '09:18', icon: Route, done: true },
-  { label: 'Armada menuju lokasi', time: 'ETA 32 menit', icon: Truck, done: false },
+  { label: 'Permintaan pickup diterima', time: '09:10', icon: PackageCheck },
+  { label: 'Mitra pengolahan dipilih', time: '09:12', icon: Factory },
+  { label: 'Rute penjemputan disiapkan', time: '09:18', icon: Route },
 ];
 
 function formatKg(value: number) {
@@ -86,6 +87,9 @@ export default function LogisticsPage() {
   const [matches, setMatches] = useState<ProcessorMatch[]>(FALLBACK_MATCHES);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [reloadToken, setReloadToken] = useState(0);
+  const [pickupStatus, setPickupStatus] = useState<PickupStatus>('in_transit');
+  const mapContainerRef = useRef<HTMLDivElement>(null);
+  const mapRef = useRef<import('leaflet').Map | null>(null);
 
   useEffect(() => {
     let active = true;
@@ -133,13 +137,51 @@ export default function LogisticsPage() {
     [bestMatch]
   );
 
+  useEffect(() => {
+    let isActive = true;
+    void import('leaflet').then(({ default: L }) => {
+      if (!isActive || !mapContainerRef.current || !bestMatch) return;
+      const map = L.map(mapContainerRef.current, { zoomControl: false }).setView(
+        [DEMO_PICKUP.lat, DEMO_PICKUP.lng],
+        12
+      );
+      mapRef.current = map;
+      L.control.zoom({ position: 'bottomright' }).addTo(map);
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '&copy; OpenStreetMap contributors',
+      }).addTo(map);
+
+      const businessIcon = L.divIcon({ className: 'leaflet-business-pin', html: '●', iconSize: [24, 24], iconAnchor: [12, 12] });
+      const processorIcon = L.divIcon({ className: 'leaflet-processor-pin', html: '◆', iconSize: [24, 24], iconAnchor: [12, 12] });
+      const vehicleIcon = L.divIcon({ className: pickupStatus === 'delivered' ? 'leaflet-delivered-pin' : 'leaflet-vehicle-pin', html: pickupStatus === 'delivered' ? '✓' : '●', iconSize: [24, 24], iconAnchor: [12, 12] });
+      const processor = matches.find((match) => match.processor_id === bestMatch.processor_id) || bestMatch;
+      const processorLat = DEMO_PICKUP.lat + 0.035;
+      const processorLng = DEMO_PICKUP.lng + 0.06;
+
+      L.marker([DEMO_PICKUP.lat, DEMO_PICKUP.lng], { icon: businessIcon })
+        .addTo(map)
+        .bindPopup(`<strong>${DEMO_PICKUP.businessName}</strong><br/>Lokasi pickup`);
+      L.marker([processorLat, processorLng], { icon: processorIcon })
+        .addTo(map)
+        .bindPopup(`<strong>${processor.name}</strong><br/>Mitra pengolahan`);
+      const midpoint: [number, number] = [(DEMO_PICKUP.lat + processorLat) / 2, (DEMO_PICKUP.lng + processorLng) / 2];
+      L.marker(midpoint, { icon: vehicleIcon }).addTo(map).bindPopup(pickupStatus === 'delivered' ? 'Pengantaran selesai' : `Armada menuju lokasi, ETA ${etaMinutes} menit`);
+      L.polyline([[DEMO_PICKUP.lat, DEMO_PICKUP.lng], [processorLat, processorLng]], { color: pickupStatus === 'delivered' ? '#718096' : '#2d7a4b', weight: 5, dashArray: pickupStatus === 'delivered' ? undefined : '10 8' }).addTo(map);
+    });
+    return () => {
+      isActive = false;
+      mapRef.current?.remove();
+      mapRef.current = null;
+    };
+  }, [bestMatch, matches, pickupStatus, etaMinutes]);
+
   return (
     <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
       <div className="mb-8 flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
         <div>
           <div className="mb-3 inline-flex items-center gap-2 rounded-full border border-chart-3/20 bg-chart-3/5 px-3 py-1 text-xs font-medium text-chart-3">
             <Truck className="h-3.5 w-3.5" />
-            Simulasi perjalanan penjemputan
+            Perjalanan pickup Anda
           </div>
           <h1 className="text-2xl font-bold tracking-tight">Pantau Penjemputan</h1>
           <p className="mt-1 max-w-2xl text-sm text-muted-foreground">
@@ -165,7 +207,7 @@ export default function LogisticsPage() {
                 <div className="mt-3 flex flex-wrap gap-2">
                   <span className="inline-flex items-center gap-1.5 rounded-full bg-primary/10 px-3 py-1 text-xs font-medium text-primary">
                     <Factory className="h-3.5 w-3.5" />
-                    {bestMatch.type === 'compost' ? 'Compost Processor' : 'BSF Processor'}
+                    {bestMatch.type === 'compost' ? 'Mitra pembuat kompos' : 'Mitra pakan maggot'}
                   </span>
                   <span className="inline-flex items-center gap-1.5 rounded-full bg-chart-3/10 px-3 py-1 text-xs font-medium text-chart-3">
                     <Route className="h-3.5 w-3.5" />
@@ -175,9 +217,9 @@ export default function LogisticsPage() {
               </div>
 
               <div className="rounded-lg border border-primary/20 bg-primary/5 p-4 text-right">
-                <p className="text-xs text-muted-foreground">Pickup ETA</p>
-                <p className="mt-1 text-3xl font-bold text-primary">{etaMinutes}</p>
-                <p className="text-xs text-muted-foreground">menit</p>
+                <p className="text-xs text-muted-foreground">{pickupStatus === 'in_transit' ? 'Perkiraan tiba' : 'Status pengantaran'}</p>
+                <p className="mt-1 text-2xl font-bold text-primary">{pickupStatus === 'in_transit' ? etaMinutes : 'Selesai'}</p>
+                <p className="text-xs text-muted-foreground">{pickupStatus === 'in_transit' ? 'menit' : 'di mitra pengolahan'}</p>
               </div>
             </div>
 
@@ -196,15 +238,15 @@ export default function LogisticsPage() {
                   Kapasitas tersedia
                 </div>
                 <p className="mt-2 text-xl font-semibold">{formatKg(bestMatch.available_capacity_kg)}</p>
-                <p className="mt-1 text-xs text-muted-foreground">Di processor pilihan</p>
+                <p className="mt-1 text-xs text-muted-foreground">Di mitra pengolahan pilihan</p>
               </div>
               <div className="rounded-lg bg-muted/40 p-4">
                 <div className="flex items-center gap-2 text-xs text-muted-foreground">
                   <Clock3 className="h-3.5 w-3.5" />
                   Status
                 </div>
-                <p className="mt-2 text-xl font-semibold">Sedang menuju lokasi</p>
-                <p className="mt-1 text-xs text-muted-foreground">Simulasi operasional</p>
+                <p className="mt-2 text-xl font-semibold">{pickupStatus === 'in_transit' ? 'Sedang menuju lokasi' : 'Sudah selesai diantar'}</p>
+                <p className="mt-1 text-xs text-muted-foreground">{pickupStatus === 'in_transit' ? 'Armada menuju lokasi' : 'Sampah sudah diterima mitra'}</p>
               </div>
             </div>
 
@@ -225,49 +267,46 @@ export default function LogisticsPage() {
                   </div>
                   <div className="min-w-0">
                     <p className="truncate text-sm font-medium">{bestMatch.name}</p>
-                    <p className="truncate text-xs text-muted-foreground">Jarak dihitung dengan Haversine</p>
+                    <p className="truncate text-xs text-muted-foreground">Mitra pengolahan terdekat</p>
                   </div>
                 </div>
               </div>
             </div>
 
-            <div className="route-map relative mt-6 min-h-56 overflow-hidden rounded-2xl border border-border p-5">
-              <div className="route-map-grid absolute inset-0 opacity-50" />
-              <div className="absolute left-[20%] top-[53%] h-1 w-[60%] -rotate-[11deg] rounded-full bg-primary/50" />
-              <div className="absolute left-[23%] top-[51%] h-5 w-[54%] -rotate-[11deg] border-t-2 border-dashed border-primary" />
-              <div className="absolute left-[14%] top-[58%] z-10 flex flex-col items-center"><span className="flex h-11 w-11 items-center justify-center rounded-full bg-chart-3 text-white shadow-lg"><MapPin className="h-5 w-5" /></span><span className="mt-2 rounded bg-card px-2 py-1 text-[11px] font-semibold shadow-sm">Lokasi Anda</span></div>
-              <div className="absolute left-[49%] top-[36%] z-10 flex flex-col items-center"><span className="flex h-11 w-11 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-lg"><Truck className="h-5 w-5" /></span><span className="mt-2 rounded bg-card px-2 py-1 text-[11px] font-semibold shadow-sm">Armada</span></div>
-              <div className="absolute right-[11%] top-[19%] z-10 flex flex-col items-center"><span className="flex h-11 w-11 items-center justify-center rounded-full bg-chart-2 text-foreground shadow-lg"><Factory className="h-5 w-5" /></span><span className="mt-2 rounded bg-card px-2 py-1 text-[11px] font-semibold shadow-sm">Mitra olah</span></div>
-              <div className="absolute bottom-4 left-4 rounded-xl bg-card/90 px-3 py-2 text-xs shadow-sm backdrop-blur"><span className="font-semibold text-primary">Dalam perjalanan</span> • Estimasi {etaMinutes} menit</div>
-            </div>
+            <div ref={mapContainerRef} className="mt-6 h-72 overflow-hidden rounded-2xl border border-border" aria-label="Peta rute pickup" />
           </section>
 
           <aside className="space-y-6">
             <div className="rounded-lg border border-border bg-card p-6 shadow-sm">
-              <h2 className="text-sm font-semibold">Timeline Pickup</h2>
-              <div className="mt-5 space-y-4">
-                {TIMELINE.map((step) => (
-                  <div key={step.label} className="flex gap-3">
-                    <div
-                      className={cn(
-                        'flex h-9 w-9 shrink-0 items-center justify-center rounded-lg',
-                        step.done ? 'bg-primary/10 text-primary' : 'bg-chart-3/10 text-chart-3'
-                      )}
-                    >
+              <div className="flex items-center justify-between gap-3">
+                <h2 className="text-sm font-semibold">Status penjemputan</h2>
+                <div className="flex rounded-lg border border-border p-1">
+                  {(['in_transit', 'delivered'] as const).map((status) => (
+                    <button key={status} onClick={() => setPickupStatus(status)} aria-pressed={pickupStatus === status} className={cn('rounded-md px-2.5 py-1.5 text-xs font-medium', pickupStatus === status ? 'bg-primary text-primary-foreground' : 'text-muted-foreground')}>
+                      {status === 'in_transit' ? 'Sedang dijemput' : 'Sudah diantar'}
+                    </button>
+                  ))}
+                </div>
+              </div>
+              <p className="mt-2 text-xs text-muted-foreground">Pilih status untuk melihat posisi terakhir perjalanan.</p>
+              <div className="mt-6 space-y-0">
+                {TIMELINE.concat({ label: pickupStatus === 'in_transit' ? 'Armada menuju lokasi' : 'Sampah selesai diantar', time: pickupStatus === 'in_transit' ? `ETA ${etaMinutes} menit` : 'Selesai 10:02', icon: pickupStatus === 'in_transit' ? Truck : CheckCircle2 }).map((step, index) => (
+                  <div key={step.label} className="relative flex gap-3 pb-5 last:pb-0">
+                    {index < TIMELINE.length && <span className="absolute left-[17px] top-9 h-[calc(100%-12px)] w-px bg-primary/25" />}
+                    <div className="relative z-10 flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary">
                       <step.icon className="h-4 w-4" />
                     </div>
                     <div className="min-w-0 flex-1">
                       <p className="text-sm font-medium">{step.label}</p>
                       <p className="text-xs text-muted-foreground">{step.time}</p>
                     </div>
-                    {step.done && <CheckCircle2 className="h-4 w-4 text-primary" />}
                   </div>
                 ))}
               </div>
             </div>
 
             <div className="rounded-lg border border-border bg-card p-6 shadow-sm">
-              <h2 className="text-sm font-semibold">Alternatif Processor</h2>
+              <h2 className="text-sm font-semibold">Mitra pengolahan lain</h2>
               <div className="mt-4 space-y-3">
                 {matches.slice(1, 4).map((match) => (
                   <div key={match.processor_id} className="rounded-lg bg-muted/40 p-3">
@@ -275,7 +314,7 @@ export default function LogisticsPage() {
                       <div className="min-w-0">
                         <p className="truncate text-sm font-medium">{match.name}</p>
                         <p className="text-xs text-muted-foreground">
-                          {match.distance_km.toLocaleString('id-ID')} km • {formatKg(match.available_capacity_kg)} available
+                          {match.distance_km.toLocaleString('id-ID')} km • kapasitas {formatKg(match.available_capacity_kg)}
                         </p>
                       </div>
                       <span className="rounded-full bg-background px-2 py-0.5 text-xs font-medium">

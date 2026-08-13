@@ -276,18 +276,30 @@ function parseClassificationResponse(raw: string): ClassificationResult {
   const contaminantType = parsed.contaminant_type
     ? String(parsed.contaminant_type).toLowerCase()
     : null;
+  const isContaminated = normalizeBoolean(parsed.is_contaminated);
+  const isFoodWaste = normalizeBoolean(parsed.is_food_waste, true);
 
   return {
     waste_type: validWasteTypes.includes(wasteType)
       ? (wasteType as ClassificationResult['waste_type'])
       : 'lainnya',
     estimated_weight_kg: Number(parsed.estimated_weight_kg) || 0,
-    is_contaminated: Boolean(parsed.is_contaminated),
+    is_contaminated: isContaminated,
     contaminant_type: validContaminantTypes.includes(contaminantType)
       ? (contaminantType as ClassificationResult['contaminant_type'])
       : null,
+    is_food_waste: isFoodWaste,
     confidence: Math.min(1, Math.max(0, Number(parsed.confidence) || 0)),
   };
+}
+
+function normalizeBoolean(value: unknown, fallback = false): boolean {
+  if (typeof value === 'boolean') return value;
+  if (typeof value === 'string') {
+    if (value.toLowerCase() === 'true') return true;
+    if (value.toLowerCase() === 'false') return false;
+  }
+  return fallback;
 }
 
 // ============================================================

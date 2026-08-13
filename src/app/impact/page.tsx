@@ -74,11 +74,11 @@ export default function ImpactDashboardPage() {
         </div>
         <h1 className="text-3xl font-bold tracking-tight sm:text-4xl">Impact Dashboard</h1>
         <p className="mt-2 text-sm text-muted-foreground">
-          Dampak nyata pengalihan sampah makanan dari TPA ke ekosistem olahan daur ulang (kompos &amp; BSF).
+          Dampak pengalihan sampah makanan dari TPA ke ekosistem olahan daur ulang, seperti kompos dan pakan maggot.
         </p>
         {usingFallback && (
           <div className="mx-auto mt-4 max-w-xl rounded-lg border border-primary/20 bg-primary/5 px-4 py-3 text-sm text-primary">
-            Ringkasan contoh siap dilihat saat database demo belum tersedia.
+            Ringkasan dampak bisnis Anda
           </div>
         )}
       </div>
@@ -111,7 +111,7 @@ export default function ImpactDashboardPage() {
           <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-chart-2/20 text-chart-2 mb-4">
             <DollarSign className="h-6 w-6" />
           </div>
-          <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Penghematan Biaya B2B</p>
+          <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Penghematan biaya bisnis</p>
           <p className="text-3xl font-extrabold mt-1 text-foreground">
             Rp {stats?.b2b_cost_saved_idr.toLocaleString('id-ID')}
           </p>
@@ -122,11 +122,11 @@ export default function ImpactDashboardPage() {
           <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-chart-3/20 text-chart-3 mb-4">
             <Factory className="h-6 w-6" />
           </div>
-          <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Fasilitas Processor</p>
+          <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Mitra pengolahan</p>
           <p className="text-3xl font-extrabold mt-1 text-foreground">
             {stats?.active_processors_count} <span className="text-base font-normal text-muted-foreground">unit</span>
           </p>
-          <p className="mt-2 text-xs text-muted-foreground">Mitra pengolah Kompos &amp; BSF aktif</p>
+          <p className="mt-2 text-xs text-muted-foreground">Mitra kompos dan pakan maggot aktif</p>
         </div>
       </div>
 
@@ -135,7 +135,7 @@ export default function ImpactDashboardPage() {
         <div className="rounded-2xl border border-border bg-card p-6 shadow-sm">
           <div className="flex items-center gap-2 mb-4">
             <PieChart className="h-5 w-5 text-primary" />
-            <h2 className="text-base font-semibold">Kapasitas Processor Terpakai</h2>
+            <h2 className="text-base font-semibold">Kapasitas mitra terpakai</h2>
           </div>
           <div className="space-y-4">
             <div className="flex items-end justify-between">

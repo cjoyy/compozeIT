@@ -26,10 +26,10 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
         <RoleProvider>
           <Navbar />
           <main className="flex-1">{children}</main>
-          <footer className="border-t border-border/40 bg-muted/30 py-6">
+          <footer className="border-t border-border/40 bg-muted/30 py-6 print:hidden">
             <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 text-center">
               <p className="text-xs text-muted-foreground">
-                © 2026 CompozeIT | Kelola sampah, dapatkan nilai
+                © 2026 CompozeIT | Sampah lebih terukur, bisnis lebih bernilai
               </p>
             </div>
           </footer>
