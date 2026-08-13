@@ -174,7 +174,7 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     console.error('[pickup] Unexpected error:', error);
     return NextResponse.json(
-      { error: 'INTERNAL_ERROR', message: 'An unexpected error occurred', details: error instanceof Error ? error.message : String(error) },
+      { error: 'INTERNAL_ERROR', message: 'Jadwal penjemputan belum dapat diproses', details: error instanceof Error ? error.message : String(error) },
       { status: 500 }
     );
   }

@@ -86,7 +86,7 @@ export async function GET(_request: NextRequest, context: TimelineContext) {
   } catch (error) {
     console.error('[timeline] Unexpected GET error:', error);
     return NextResponse.json(
-      { success: false, error: 'INTERNAL_ERROR', message: 'An unexpected error occurred', details: error instanceof Error ? error.message : String(error) },
+      { success: false, error: 'INTERNAL_ERROR', message: 'Riwayat penjemputan belum dapat dimuat', details: error instanceof Error ? error.message : String(error) },
       { status: 500 }
     );
   }
@@ -155,7 +155,7 @@ export async function PATCH(request: NextRequest, context: TimelineContext) {
   } catch (error) {
     console.error('[timeline] Unexpected PATCH error:', error);
     return NextResponse.json(
-      { success: false, error: 'INTERNAL_ERROR', message: 'An unexpected error occurred', details: error instanceof Error ? error.message : String(error) },
+      { success: false, error: 'INTERNAL_ERROR', message: 'Status penjemputan belum dapat diperbarui', details: error instanceof Error ? error.message : String(error) },
       { status: 500 }
     );
   }

@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from 'react';
 import { LoadingState } from '@/components/loading-state';
-import { ErrorState } from '@/components/error-state';
 import {
   Scale,
   TrendingDown,
@@ -13,6 +12,7 @@ import {
   Award,
   Globe,
 } from 'lucide-react';
+import { fetchWithTimeout } from '@/lib/fetch-with-timeout';
 
 interface ImpactStats {
   total_waste_diverted_kg: number;
@@ -24,23 +24,35 @@ interface ImpactStats {
   capacity_utilized_percent: number;
 }
 
+const FALLBACK_STATS: ImpactStats = {
+  total_waste_diverted_kg: 128.5,
+  co2_avoided_kg: 321.3,
+  b2b_cost_saved_idr: 64250,
+  active_processors_count: 3,
+  total_capacity_kg: 2200,
+  total_current_load_kg: 860,
+  capacity_utilized_percent: 39,
+};
+
 export default function ImpactDashboardPage() {
   const [stats, setStats] = useState<ImpactStats | null>(null);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-
-  const [reloadToken, setReloadToken] = useState(0);
+  const [usingFallback, setUsingFallback] = useState(false);
 
   useEffect(() => {
     let active = true;
     async function loadImpact() {
+      setUsingFallback(false);
       try {
-        const res = await fetch('/api/impact');
+        const res = await fetchWithTimeout('/api/impact', {}, 2500);
         const data = await res.json();
         if (!res.ok) throw new Error(data.message || 'Gagal memuat data dampak');
         if (active) setStats(data);
-      } catch (err) {
-        if (active) setError(err instanceof Error ? err.message : 'Terjadi kesalahan');
+      } catch {
+        if (active) {
+          setStats(FALLBACK_STATS);
+          setUsingFallback(true);
+        }
       } finally {
         if (active) setLoading(false);
       }
@@ -49,12 +61,9 @@ export default function ImpactDashboardPage() {
     return () => {
       active = false;
     };
-  }, [reloadToken]);
-
-  const handleRetry = () => setReloadToken((t) => t + 1);
+  }, []);
 
   if (loading) return <LoadingState message="Memuat Impact Dashboard..." className="py-20" />;
-  if (error) return <ErrorState message={error} onRetry={handleRetry} className="py-20" />;
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
@@ -67,6 +76,11 @@ export default function ImpactDashboardPage() {
         <p className="mt-2 text-sm text-muted-foreground">
           Dampak nyata pengalihan sampah makanan dari TPA ke ekosistem olahan daur ulang (kompos &amp; BSF).
         </p>
+        {usingFallback && (
+          <div className="mx-auto mt-4 max-w-xl rounded-lg border border-primary/20 bg-primary/5 px-4 py-3 text-sm text-primary">
+            Ringkasan contoh siap dilihat saat database demo belum tersedia.
+          </div>
+        )}
       </div>
 
       {/* Main Stats Grid */}

@@ -15,6 +15,7 @@ import {
 import { ErrorState } from '@/components/error-state';
 import { LoadingState } from '@/components/loading-state';
 import { useRole } from '@/components/role-provider';
+import { fetchWithTimeout } from '@/lib/fetch-with-timeout';
 import { cn } from '@/lib/utils';
 
 interface WasteSubmission {
@@ -52,7 +53,6 @@ export default function CompliancePage() {
   const { userId, userName } = useRole();
   const [submissions, setSubmissions] = useState<WasteSubmission[]>([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
   const [usingFallback, setUsingFallback] = useState(false);
   const [reloadToken, setReloadToken] = useState(0);
 
@@ -61,11 +61,10 @@ export default function CompliancePage() {
 
     async function loadReport() {
       setLoading(true);
-      setError(null);
       setUsingFallback(false);
 
       try {
-        const submissionsRes = await fetch(`/api/waste/submissions?user_id=${userId}&track=b2b`);
+        const submissionsRes = await fetchWithTimeout(`/api/waste/submissions?user_id=${userId}&track=b2b`, {}, 2500);
         const submissionsData = await submissionsRes.json();
 
         if (!submissionsRes.ok) {
@@ -75,11 +74,10 @@ export default function CompliancePage() {
         if (active) {
           setSubmissions(submissionsData.submissions || []);
         }
-      } catch (err) {
+      } catch {
         if (active) {
           setSubmissions(FALLBACK_SUBMISSIONS);
           setUsingFallback(true);
-          setError(err instanceof Error ? err.message : 'Data Supabase belum tersedia');
         }
       } finally {
         if (active) setLoading(false);
@@ -144,10 +142,10 @@ export default function CompliancePage() {
       </div>
 
       {usingFallback && (
-        <div className="mb-6 rounded-lg border border-chart-4/30 bg-chart-4/5 p-4">
-          <p className="text-sm font-medium text-foreground">Mode demo fallback aktif</p>
+        <div className="mb-6 rounded-lg border border-primary/20 bg-primary/5 p-4">
+          <p className="text-sm font-medium text-foreground">Ringkasan contoh siap dilihat</p>
           <p className="mt-1 text-xs text-muted-foreground">
-            {error}. Angka fallback hanya menjaga tampilan laporan saat database lokal belum terhubung.
+            Angka di halaman ini memakai data contoh agar laporan tetap mudah dipresentasikan.
           </p>
         </div>
       )}

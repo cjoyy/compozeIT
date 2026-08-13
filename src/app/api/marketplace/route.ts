@@ -88,7 +88,7 @@ export async function GET(request: NextRequest) {
   } catch (error) {
     console.error('[marketplace] GET Unexpected error:', error);
     return NextResponse.json(
-      { error: 'INTERNAL_ERROR', message: 'An unexpected error occurred', details: error instanceof Error ? error.message : String(error) },
+      { error: 'INTERNAL_ERROR', message: 'Katalog hasil olahan belum dapat dimuat', details: error instanceof Error ? error.message : String(error) },
       { status: 500 }
     );
   }

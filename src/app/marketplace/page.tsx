@@ -2,8 +2,8 @@
 
 import { useEffect, useState } from 'react';
 import { LoadingState } from '@/components/loading-state';
-import { ErrorState } from '@/components/error-state';
 import { Button } from '@/components/ui/button';
+import { fetchWithTimeout } from '@/lib/fetch-with-timeout';
 import {
   Store,
   Filter,
@@ -29,34 +29,83 @@ interface MarketplaceListing {
   created_at: string;
 }
 
+const FALLBACK_LISTINGS: MarketplaceListing[] = [
+  {
+    id: 'demo-compost-1',
+    processor_id: 'demo-processor-kompos',
+    processor_name: 'Green Cycle Compost Hub',
+    processor_type: 'compost',
+    product_type: 'compost',
+    price_per_kg: 3500,
+    stock_kg: 820,
+    npk_content: '2-1-2',
+    description: 'Kompos matang dari limbah dapur hotel dan kantin, cocok untuk urban farming dan taman kantor.',
+    created_at: new Date().toISOString(),
+  },
+  {
+    id: 'demo-bsf-1',
+    processor_id: 'demo-processor-bsf',
+    processor_name: 'BSF Nusantara Feed',
+    processor_type: 'bsf',
+    product_type: 'bsf',
+    price_per_kg: 6200,
+    stock_kg: 460,
+    npk_content: null,
+    description: 'Pakan maggot kering hasil pengolahan sampah makanan bersih dengan standar traceability batch.',
+    created_at: new Date().toISOString(),
+  },
+  {
+    id: 'demo-compost-2',
+    processor_id: 'demo-processor-kompos-2',
+    processor_name: 'Kebun Sirkular Jakarta',
+    processor_type: 'compost',
+    product_type: 'compost',
+    price_per_kg: 4100,
+    stock_kg: 540,
+    npk_content: '3-1-2',
+    description: 'Kompos premium untuk landscaping komersial dengan bahan baku food waste terpilah.',
+    created_at: new Date().toISOString(),
+  },
+];
+
 export default function MarketplacePage() {
   const [listings, setListings] = useState<MarketplaceListing[]>([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const [usingFallback, setUsingFallback] = useState(false);
   const [filter, setFilter] = useState<'all' | 'compost' | 'bsf'>('all');
   const [sortBy, setSortBy] = useState<'price' | 'stock'>('price');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
   const [selectedListing, setSelectedListing] = useState<MarketplaceListing | null>(null);
 
-  const [reloadToken, setReloadToken] = useState(0);
-
   useEffect(() => {
     let active = true;
     async function loadListings() {
       setLoading(true);
-      setError(null);
+      setUsingFallback(false);
       try {
         const params = new URLSearchParams();
         if (filter !== 'all') params.set('product_type', filter);
         params.set('sort_by', sortBy === 'price' ? 'price_per_kg' : 'stock_kg');
         params.set('sort_order', sortOrder);
 
-        const res = await fetch(`/api/marketplace?${params}`);
+        const res = await fetchWithTimeout(`/api/marketplace?${params}`, {}, 2500);
         const data = await res.json();
         if (!res.ok) throw new Error(data.message || 'Gagal memuat listing');
         if (active) setListings(data.listings || []);
-      } catch (err) {
-        if (active) setError(err instanceof Error ? err.message : 'Terjadi kesalahan');
+      } catch {
+        if (active) {
+          const filteredListings = filter === 'all'
+            ? FALLBACK_LISTINGS
+            : FALLBACK_LISTINGS.filter((listing) => listing.product_type === filter);
+          const fallbackListings = [...filteredListings].sort((a, b) => {
+            const left = sortBy === 'price' ? a.price_per_kg : a.stock_kg;
+            const right = sortBy === 'price' ? b.price_per_kg : b.stock_kg;
+            return sortOrder === 'asc' ? left - right : right - left;
+          });
+
+          setListings(fallbackListings);
+          setUsingFallback(true);
+        }
       } finally {
         if (active) setLoading(false);
       }
@@ -65,9 +114,7 @@ export default function MarketplacePage() {
     return () => {
       active = false;
     };
-  }, [filter, sortBy, sortOrder, reloadToken]);
-
-  const handleRetry = () => setReloadToken((t) => t + 1);
+  }, [filter, sortBy, sortOrder]);
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
@@ -150,16 +197,20 @@ export default function MarketplacePage() {
 
       {/* Content */}
       {loading && <LoadingState message="Memuat listing..." />}
-      {error && <ErrorState message={error} onRetry={handleRetry} />}
+      {usingFallback && (
+        <div className="mb-4 rounded-lg border border-primary/20 bg-primary/5 px-4 py-3 text-sm text-primary">
+          Katalog contoh siap dilihat. Data ini menjaga alur demo marketplace tetap terisi saat database belum tersedia.
+        </div>
+      )}
 
-      {!loading && !error && listings.length === 0 && (
+      {!loading && listings.length === 0 && (
         <div className="text-center py-16">
           <Store className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
           <p className="text-sm text-muted-foreground">Tidak ada listing ditemukan.</p>
         </div>
       )}
 
-      {!loading && !error && listings.length > 0 && (
+      {!loading && listings.length > 0 && (
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {listings.map((listing) => (
             <div

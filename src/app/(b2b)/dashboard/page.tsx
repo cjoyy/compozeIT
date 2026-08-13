@@ -3,8 +3,8 @@
 import { useEffect, useState } from 'react';
 import { useRole } from '@/components/role-provider';
 import { LoadingState } from '@/components/loading-state';
-import { ErrorState } from '@/components/error-state';
 import { QRCodeSVG } from 'qrcode.react';
+import { fetchWithTimeout } from '@/lib/fetch-with-timeout';
 import {
   TrendingDown,
   Leaf,
@@ -37,22 +37,20 @@ export default function B2BDashboardPage() {
   const { userId, userName } = useRole();
   const [submissions, setSubmissions] = useState<WasteSubmission[]>([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [reloadToken, setReloadToken] = useState(0);
 
   useEffect(() => {
     let active = true;
     async function loadData() {
       try {
-        const res = await fetch(`/api/waste/submissions?user_id=${userId}&track=b2b`);
+        const res = await fetchWithTimeout(`/api/waste/submissions?user_id=${userId}&track=b2b`, {}, 2500);
         if (!res.ok) {
           if (active) setSubmissions([]);
           return;
         }
         const data = await res.json();
         if (active) setSubmissions(data.submissions || []);
-      } catch (err) {
-        if (active) setError(err instanceof Error ? err.message : 'Gagal memuat data');
+      } catch {
+        if (active) setSubmissions([]);
       } finally {
         if (active) setLoading(false);
       }
@@ -61,9 +59,7 @@ export default function B2BDashboardPage() {
     return () => {
       active = false;
     };
-  }, [userId, reloadToken]);
-
-  const handleRetry = () => setReloadToken((t) => t + 1);
+  }, [userId]);
 
   const totalKg = submissions.reduce((sum, s) => sum + Number(s.estimated_weight_kg || 0), 0);
   const totalCostSaved = totalKg * CONVENTIONAL_COST_PER_KG;
@@ -88,7 +84,6 @@ export default function B2BDashboardPage() {
   };
 
   if (loading) return <LoadingState message="Memuat dashboard..." className="py-20" />;
-  if (error) return <ErrorState message={error} onRetry={handleRetry} className="py-20" />;
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">

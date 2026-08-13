@@ -175,7 +175,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json(
       {
         error: 'INTERNAL_ERROR',
-        message: 'An unexpected error occurred',
+            message: 'Foto belum dapat dianalisis saat ini',
         details: error instanceof Error ? error.message : String(error),
       },
       { status: 500 }

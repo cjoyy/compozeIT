@@ -3,19 +3,21 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useRole } from '@/components/role-provider';
-import { Menu, UserRound, X } from 'lucide-react';
+import { BarChart3, Menu, ScanLine, Truck, UserRound, X } from 'lucide-react';
 import Image from 'next/image';
 import { useState } from 'react';
 import { cn } from '@/lib/utils';
 
-const B2B_LINKS = [
-  { href: '/upload', label: 'Scan Sampah' },
-  { href: '/dashboard', label: 'Ringkasan' },
-  { href: '/logistics', label: 'Jemputan' },
+const PRIMARY_LINKS = [
+  { href: '/upload', label: 'Scan', icon: ScanLine },
+  { href: '/dashboard', label: 'Ringkasan', icon: BarChart3 },
+  { href: '/logistics', label: 'Jemputan', icon: Truck },
+];
+
+const INSIGHT_LINKS = [
   { href: '/marketplace', label: 'Hasil Olahan' },
   { href: '/compliance', label: 'Laporan' },
   { href: '/impact', label: 'Dampak' },
-  { href: '/profile', label: 'Profil Bisnis' },
 ];
 
 export function Navbar() {
@@ -23,7 +25,7 @@ export function Navbar() {
   const pathname = usePathname();
   const [mobileOpen, setMobileOpen] = useState(false);
 
-  const links = B2B_LINKS;
+  const isActive = (href: string) => pathname === href || pathname.startsWith(`${href}/`);
 
   return (
     <nav className="sticky top-0 z-50 border-b border-border/60 bg-background/80 backdrop-blur-xl">
@@ -35,24 +37,32 @@ export function Navbar() {
           </Link>
 
           {/* Desktop Nav Links */}
-          <div className="hidden md:flex items-center gap-1">
-            {links.map((link) => (
+          <div className="hidden md:flex items-center gap-1 rounded-xl border border-border/70 bg-card/70 p-1 shadow-sm">
+            {PRIMARY_LINKS.map((link) => (
               <Link
                 key={link.href}
                 href={link.href}
                 className={cn(
-                  'px-3 py-2 text-sm font-medium rounded-lg transition-base',
-                  pathname === link.href || pathname.startsWith(link.href + '/')
-                    ? 'bg-primary/10 text-primary'
+                  'inline-flex items-center gap-1.5 px-3 py-2 text-sm font-medium rounded-lg transition-base',
+                  isActive(link.href)
+                    ? 'bg-primary text-primary-foreground shadow-sm'
                     : 'text-muted-foreground hover:text-foreground hover:bg-muted'
                 )}
               >
+                <link.icon className="h-4 w-4" />
                 {link.label}
               </Link>
             ))}
           </div>
 
           {/* Demo business user */}
+          <div className="hidden lg:flex items-center gap-1">
+            {INSIGHT_LINKS.map((link) => (
+              <Link key={link.href} href={link.href} className={cn('rounded-lg px-2.5 py-2 text-xs font-medium transition-base', isActive(link.href) ? 'text-primary' : 'text-muted-foreground hover:bg-muted hover:text-foreground')}>
+                {link.label}
+              </Link>
+            ))}
+          </div>
           <div className="hidden md:flex items-center gap-3">
             <Link href="/profile" className="inline-flex items-center gap-2 rounded-lg px-2 py-1.5 text-xs text-muted-foreground hover:bg-muted hover:text-foreground">
               <UserRound className="h-4 w-4" />
@@ -76,19 +86,29 @@ export function Navbar() {
       {/* Mobile Menu */}
       {mobileOpen && (
         <div id="mobile-navigation" className="md:hidden border-t border-border bg-background px-4 pb-4 pt-2 space-y-1">
-          <p className="text-xs text-muted-foreground px-3 pb-2">{userName}</p>
-          {links.map((link) => (
+          <Link href="/profile" onClick={() => setMobileOpen(false)} className="mb-2 flex items-center gap-2 rounded-xl bg-muted/70 px-3 py-3 text-sm font-semibold">
+            <UserRound className="h-4 w-4 text-primary" /> {userName}
+          </Link>
+          <p className="px-3 pb-1 pt-1 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">Operasional</p>
+          {PRIMARY_LINKS.map((link) => (
             <Link
               key={link.href}
               href={link.href}
               onClick={() => setMobileOpen(false)}
               className={cn(
                 'block px-3 py-2.5 text-sm font-medium rounded-lg transition-base',
-                pathname === link.href || pathname.startsWith(link.href + '/')
+                isActive(link.href)
                   ? 'bg-primary/10 text-primary'
                   : 'text-muted-foreground hover:text-foreground hover:bg-muted'
               )}
-            >
+              >
+              <link.icon className="mr-2 inline h-4 w-4" />
+              {link.label}
+            </Link>
+          ))}
+          <p className="px-3 pb-1 pt-4 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">Informasi</p>
+          {INSIGHT_LINKS.map((link) => (
+            <Link key={link.href} href={link.href} onClick={() => setMobileOpen(false)} className={cn('block rounded-lg px-3 py-2.5 text-sm font-medium transition-base', isActive(link.href) ? 'bg-primary/10 text-primary' : 'text-muted-foreground hover:bg-muted hover:text-foreground')}>
               {link.label}
             </Link>
           ))}
