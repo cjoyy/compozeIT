@@ -50,6 +50,7 @@ export default function B2BUploadPage() {
   const [error, setError] = useState<string | null>(null);
   const [result, setResult] = useState<ClassifyResult | null>(null);
   const [sampleUrl, setSampleUrl] = useState<string | null>(null);
+  const [manualWeight, setManualWeight] = useState('');
 
   const sampleImages = [
     '/samples/food-waste/sampah1.jpeg',
@@ -68,6 +69,7 @@ export default function B2BUploadPage() {
     setResult(null);
 
     try {
+      const parsedManualWeight = manualWeight ? Number(manualWeight) : undefined;
       const res = await fetch('/api/waste/classify', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -75,10 +77,17 @@ export default function B2BUploadPage() {
           image: imageBase64,
           user_id: userId,
           track: 'b2b',
+          ...(parsedManualWeight ? { estimated_weight_kg: parsedManualWeight } : {}),
         }),
       });
 
-      const data = await res.json();
+      const responseText = await res.text();
+      let data: ClassifyResult & { message?: string };
+      try {
+        data = JSON.parse(responseText);
+      } catch {
+        throw new Error(res.status === 413 ? 'Foto terlalu besar. Coba gunakan foto yang lebih kecil.' : 'Server tidak mengembalikan respons yang valid. Coba lagi.');
+      }
 
       if (!res.ok) {
         throw new Error(data.message || 'Gagal mengklasifikasi sampah');
@@ -110,6 +119,11 @@ export default function B2BUploadPage() {
         </p>
       </div>
 
+      <div className="mb-6 rounded-2xl border border-chart-1/30 bg-chart-1/10 p-4">
+        <p className="text-sm font-semibold text-foreground">Tips foto agar hasil lebih akurat</p>
+        <p className="mt-1 text-xs text-muted-foreground">Ratakan sampah di permukaan datar, pastikan seluruh material terlihat, gunakan pencahayaan cukup, dan hindari objek bertumpuk.</p>
+      </div>
+
       {/* Upload Section */}
       <div className="space-y-4">
         <ImageUpload
@@ -139,6 +153,15 @@ export default function B2BUploadPage() {
             ))}
           </div>
         </div>
+
+        <label className="block space-y-1.5">
+          <span className="text-xs font-medium text-muted-foreground">Berat aktual (opsional)</span>
+          <div className="relative">
+            <input type="number" min="0.1" max="1000" step="0.1" value={manualWeight} onChange={(event) => setManualWeight(event.target.value)} placeholder="Kosongkan untuk estimasi AI" className="h-11 w-full rounded-xl border border-border bg-background px-3 pr-12 text-sm outline-none focus:border-primary focus:ring-2 focus:ring-primary/20" />
+            <span className="pointer-events-none absolute inset-y-0 right-3 flex items-center text-sm text-muted-foreground">kg</span>
+          </div>
+          <span className="block text-xs text-muted-foreground">Jika tersedia timbangan, masukkan angka ini untuk perhitungan cashback yang lebih tepat.</span>
+        </label>
 
         {imageBase64 && !loading && !result && (
           <Button

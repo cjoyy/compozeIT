@@ -11,6 +11,7 @@ interface ClassifyRequestBody {
   image: string;     // base64-encoded image
   user_id: string;   // UUID
   track: 'b2b';
+  estimated_weight_kg?: number;
 }
 
 interface WasteSubmissionWithCashback {
@@ -57,6 +58,13 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    if (body.estimated_weight_kg !== undefined && (!Number.isFinite(body.estimated_weight_kg) || body.estimated_weight_kg <= 0 || body.estimated_weight_kg > 1000)) {
+      return NextResponse.json(
+        { error: 'INVALID_WEIGHT', message: 'Berat manual harus di antara 0,1 dan 1.000 kg' },
+        { status: 400 }
+      );
+    }
+
     // Check image size (max ~10MB base64 ≈ 13.3MB string)
     if (body.image.length > 13_300_000) {
       return NextResponse.json(
@@ -94,9 +102,8 @@ export async function POST(request: NextRequest) {
     }
 
     const status = 'pending';
-    const cashbackAmount = calculateCashbackAmount(
-      Number(classificationResult.estimated_weight_kg || 0)
-    );
+    const estimatedWeightKg = body.estimated_weight_kg ?? Number(classificationResult.estimated_weight_kg || 0);
+    const cashbackAmount = calculateCashbackAmount(estimatedWeightKg);
 
     // 4. Save to Supabase
     const supabase = getSupabaseServerClient();
@@ -105,7 +112,7 @@ export async function POST(request: NextRequest) {
       .rpc('create_b2b_waste_submission_with_cashback', {
         p_user_id: body.user_id,
         p_waste_type: classificationResult.waste_type,
-        p_estimated_weight_kg: classificationResult.estimated_weight_kg,
+        p_estimated_weight_kg: estimatedWeightKg,
         p_cashback_amount: cashbackAmount,
         p_is_contaminated: classificationResult.is_contaminated,
         p_contaminant_type: classificationResult.contaminant_type,

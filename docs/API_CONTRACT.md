@@ -37,6 +37,7 @@ interface ClassifyRequest {
   image: string;        // base64-encoded image (JPEG/PNG)
   user_id: string;      // UUID of the user
   track: TrackType;     // must be 'b2b'
+  estimated_weight_kg?: number; // optional manual scale value; otherwise AI estimate is used
 }
 ```
 
