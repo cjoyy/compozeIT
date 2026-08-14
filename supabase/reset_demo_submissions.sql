@@ -13,40 +13,39 @@ BEGIN
   END IF;
 END $$;
 
-CREATE TEMP TABLE reset_demo_submission_ids ON COMMIT DROP AS
-SELECT id
-FROM waste_submissions
-WHERE user_id = 'd0d0d0d0-0000-4000-8000-000000000001';
-
-CREATE TEMP TABLE reset_demo_batch_ids ON COMMIT DROP AS
-SELECT DISTINCT batch_id
-FROM batch_submissions
-WHERE submission_id IN (SELECT id FROM reset_demo_submission_ids)
+-- Remove demo-only batches first. ON DELETE CASCADE clears their timeline and junction rows.
+-- Shared batches are excluded so another user's timeline remains untouched.
+DELETE FROM batches
+WHERE id IN (
+  SELECT DISTINCT demo_links.batch_id
+  FROM batch_submissions demo_links
+  WHERE demo_links.submission_id IN (
+    SELECT id
+    FROM waste_submissions
+    WHERE user_id = 'd0d0d0d0-0000-4000-8000-000000000001'
+  )
   AND NOT EXISTS (
     SELECT 1
-    FROM batch_submissions other_submissions
-    WHERE other_submissions.batch_id = batch_submissions.batch_id
-      AND other_submissions.submission_id NOT IN (SELECT id FROM reset_demo_submission_ids)
-  );
+    FROM batch_submissions other_links
+    WHERE other_links.batch_id = demo_links.batch_id
+      AND other_links.submission_id NOT IN (
+        SELECT id
+        FROM waste_submissions
+        WHERE user_id = 'd0d0d0d0-0000-4000-8000-000000000001'
+      )
+  )
+);
 
--- Remove timeline only for batches that contain demo submissions exclusively.
-DELETE FROM batch_status_events
-WHERE batch_id IN (SELECT batch_id FROM reset_demo_batch_ids);
-
+-- Remove demo submissions from any shared batch, then remove the submissions themselves.
 DELETE FROM batch_submissions
-WHERE submission_id IN (SELECT id FROM reset_demo_submission_ids);
+WHERE submission_id IN (
+  SELECT id
+  FROM waste_submissions
+  WHERE user_id = 'd0d0d0d0-0000-4000-8000-000000000001'
+);
 
 DELETE FROM waste_submissions
-WHERE id IN (SELECT id FROM reset_demo_submission_ids);
-
--- A batch is removed only when it no longer contains another user's submission.
-DELETE FROM batches
-WHERE id IN (SELECT batch_id FROM reset_demo_batch_ids)
-  AND NOT EXISTS (
-    SELECT 1 FROM batch_submissions
-    WHERE batch_submissions.batch_id = batches.id
-  );
-
+WHERE user_id = 'd0d0d0d0-0000-4000-8000-000000000001';
 UPDATE users
 SET total_cashback_balance = 0,
     subscription_status = 'active'
