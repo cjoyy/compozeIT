@@ -20,6 +20,7 @@ import Link from 'next/link';
 interface ClassifyResult {
   id: string;
   waste_type: string;
+  food_detail: string | null;
   estimated_weight_kg: number;
   is_contaminated: boolean;
   contaminant_type: string | null;
@@ -39,7 +40,7 @@ const CONTAMINANT_LABELS: Record<string, string> = {
   plastik: 'Plastik',
   logam: 'Logam',
   kaca: 'Kaca',
-  lainnya: 'Material lain (misalnya kardus)',
+  lainnya: 'Material lain (kardus/kertas, kain, kayu, tulang, atau cairan kimia)',
 };
 
 export default function B2BUploadPage() {
@@ -55,7 +56,7 @@ export default function B2BUploadPage() {
     '/samples/food-waste/sampah2.png',
     '/samples/food-waste/sampah3.jpg',
     '/samples/food-waste/sampah4.png',
-    '/samples/food-waste/sampah5.jpeg',
+    '/samples/food-waste/sampah5.jpg',
     '/samples/food-waste/sampah6.jpeg',
   ];
 
@@ -97,7 +98,7 @@ export default function B2BUploadPage() {
     protein: '🍗 Protein',
     buah: '🍎 Buah',
     campuran: '🥗 Campuran',
-    lainnya: '📦 Lainnya',
+    lainnya: '📦 Lainnya (donat/kue/roti atau organik lain)',
   };
 
   return (
@@ -180,6 +181,7 @@ export default function B2BUploadPage() {
                 <p className="text-lg font-semibold">
                   {wasteTypeLabels[result.waste_type] || result.waste_type}
                 </p>
+                {result.food_detail && <p className="mt-1 text-xs text-muted-foreground">Teridentifikasi sebagai: {result.food_detail}</p>}
               </div>
 
               <div className="rounded-xl bg-muted/50 p-4">

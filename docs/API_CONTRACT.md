@@ -46,6 +46,7 @@ interface ClassifyRequest {
 interface ClassifyResponse {
   id: string;                           // UUID of created waste_submission
   waste_type: WasteType;
+  food_detail: string | null;                // specific food name when visible (for example donut)
   estimated_weight_kg: number;
   cashback_amount: number;                // estimated_weight_kg * Rp1.000/kg
   user_cashback_balance: number;          // user's balance after this submission
@@ -91,6 +92,7 @@ interface ClassifyResponse {
 {
   "id": "d290f1ee-6c54-4b01-90e6-d701748f0851",
   "waste_type": "sayur",
+  "food_detail": "sayur hijau",
   "estimated_weight_kg": 2.5,
   "cashback_amount": 2500,
   "user_cashback_balance": 12500,

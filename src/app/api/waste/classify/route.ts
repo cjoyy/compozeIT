@@ -133,6 +133,7 @@ export async function POST(request: NextRequest) {
     const response: Record<string, unknown> = {
       id: data.id,
       waste_type: data.waste_type,
+      food_detail: classificationResult.food_detail,
       estimated_weight_kg: data.estimated_weight_kg,
       is_contaminated: data.is_contaminated,
       contaminant_type: data.contaminant_type,

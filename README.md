@@ -124,6 +124,8 @@ Untuk menyiapkan database demo:
    - `update_batch_status_with_timeline`
 4. Pastikan user demo tersedia: `d0d0d0d0-0000-4000-8000-000000000001`.
 
+Untuk mereset histori submission user demo dan mengisi satu data untuk setiap jenis sampah, jalankan [supabase/reset_demo_submissions.sql](supabase/reset_demo_submissions.sql) **hanya pada database demo**. Script ini membatasi penghapusan pada user demo, tidak menghapus timeline batch yang juga dipakai submission bisnis lain, dan menghasilkan 6 submission dengan saldo cashback Rp20.800.
+
 Dokumentasi target schema dan diagram relasi tersedia di [docs/DATABASE_SCHEMA.md](docs/DATABASE_SCHEMA.md) dan [docs/database-schema-erd.svg](docs/database-schema-erd.svg).
 
 ## Struktur folder penting

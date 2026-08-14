@@ -277,19 +277,31 @@ function parseClassificationResponse(raw: string): ClassificationResult {
     ? String(parsed.contaminant_type).toLowerCase()
     : null;
   const isContaminated = normalizeBoolean(parsed.is_contaminated);
-  const isFoodWaste = normalizeBoolean(parsed.is_food_waste, true);
+  const foodDetail = typeof parsed.food_detail === 'string' ? parsed.food_detail.trim().slice(0, 80) : null;
+  const isFoodWaste = normalizeBoolean(parsed.is_food_waste, false);
+
+  // Mixed or contaminated photos are inherently less certain, so keep the score honest for demo users.
+  const rawConfidence = Math.min(1, Math.max(0, Number(parsed.confidence) || 0));
+  const normalizedConfidence = !isFoodWaste
+    ? Math.min(0.35, rawConfidence)
+    : wasteType === 'campuran' || isContaminated || contaminantType !== null
+      ? Math.min(contaminantType === 'lainnya' ? 0.7 : 0.75, rawConfidence)
+      : rawConfidence;
 
   return {
+    food_detail: foodDetail || null,
     waste_type: validWasteTypes.includes(wasteType)
       ? (wasteType as ClassificationResult['waste_type'])
       : 'lainnya',
     estimated_weight_kg: Number(parsed.estimated_weight_kg) || 0,
-    is_contaminated: isContaminated,
-    contaminant_type: validContaminantTypes.includes(contaminantType)
-      ? (contaminantType as ClassificationResult['contaminant_type'])
+    is_contaminated: isContaminated || contaminantType !== null,
+    contaminant_type: isContaminated || contaminantType !== null
+      ? (validContaminantTypes.includes(contaminantType)
+        ? (contaminantType as ClassificationResult['contaminant_type'])
+        : 'lainnya')
       : null,
     is_food_waste: isFoodWaste,
-    confidence: Math.min(1, Math.max(0, Number(parsed.confidence) || 0)),
+    confidence: normalizedConfidence,
   };
 }
 
